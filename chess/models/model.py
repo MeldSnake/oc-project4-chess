@@ -35,7 +35,7 @@ class Model:
     def __new__(cls: type[Self], *args, **kwargs) -> Self:
         if not hasattr(cls, "_references"):
             cls._references: list[ref[Self]] = []
-        obj = super(Model, cls).__new__(cls, *args, **kwargs)
+        obj = super(Model, cls).__new__(cls)
         cls._references.append(ref(obj))
         return obj
 
@@ -119,7 +119,7 @@ class Model:
         ids: list[int] = []
         table = cls.getTable(db)
         for value in values:
-            if not value.updated:
+            if value.updated:
                 if value.model_id == -1:
                     value.model_id = table.insert(cls.toDocument(value))
                 else:

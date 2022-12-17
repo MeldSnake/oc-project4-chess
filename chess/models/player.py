@@ -53,7 +53,7 @@ class Player(Model):
         data: dict = {
             'first_name': value.first_name,
             'last_name': value.last_name,
-            'brithdate': serialize_date(value.birthdate, ""),
+            'birthdate': serialize_date(value.birthdate, ""),
             'gender': value.gender,
             'rank': value.rank
         }
