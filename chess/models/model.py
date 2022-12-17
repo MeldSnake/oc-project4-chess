@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Self
+from typing import Generator, Self
 from weakref import ref
 
 from tinydb import TinyDB, where
@@ -39,6 +39,12 @@ class Model:
         cls._references.append(ref(obj))
         return obj
 
+    def copy(self) -> Self:
+        raise NotImplementedError()
+
+    def update(self, src: Self):
+        raise NotImplementedError()
+
     @classmethod
     def toDocument(cls, value: Self) -> dict:
         return {
@@ -54,8 +60,10 @@ class Model:
         raise NotImplementedError()
 
     @classmethod
-    def _cleaned_references(cls):
+    def _cleaned_references(cls) -> list[ref[Self]]:
         idx = 0
+        if not hasattr(cls, '_references'):
+            cls._references = []
         while idx < len(cls._references):
             if cls._references[idx]() is None:
                 cls._references.pop(idx)
@@ -76,10 +84,35 @@ class Model:
         return None
 
     @classmethod
-    def search(cls, db: TinyDB, query: QueryLike | QueryInstance):
+    def search(cls, db: TinyDB, query: QueryLike | QueryInstance) -> Generator[Self, None, None]:
         table = cls.getTable(db)
+        refs = [x() for x in cls._cleaned_references()]
         for document in table.search(query):  # type: ignore
-            yield cls.fromDocument(db, document)
+            found: Self | None = None
+            for ref_ in refs:
+                if ref_ is not None and ref_.model_id == document['id']:
+                    found = ref_
+                    break
+            if found is None:
+                yield cls.fromDocument(db, document)
+            else:
+                yield found
+
+    @classmethod
+    def all(cls, db: TinyDB) -> list[Self]:
+        alls = []
+        refs = [x() for x in cls._cleaned_references()]
+        for document in cls.getTable(db).all():
+            found = None
+            for ref_ in refs:
+                if ref_ is not None and ref_.model_id == document['id']:
+                    found = ref_
+                    break
+            if found is None:
+                alls.append(cls.fromDocument(db, document))
+            else:
+                alls.append(found)
+        return alls
 
     @classmethod
     def save(cls, db: TinyDB, *values: Self):
