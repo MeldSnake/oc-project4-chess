@@ -22,7 +22,7 @@ class EditView(View):
                 print(self.pre_header)
             if self.oldValue is not None:
                 print("Ancienne valeur: %s" % self.oldValue)
-                print("Ecrivez 'annuler' pour revenir en arriere")
+            print("Pour annuler la modification entré une valeure vide")
             self.header = False
         if self.error is not None:
             print(self.error)
@@ -42,9 +42,7 @@ class EditController(Generic[T], Controller):
         self.oldValue: T | None = None
         self.view = EditView()
 
-    def deserialize_value(self, value: str) -> T | None:
-        if value == "annuler":
-            return None
+    def deserialize_value(self, value: str) -> T | ValueError | None:
         if self.vtype == str:
             return value  # type: ignore
         if self.vtype == int:
@@ -53,19 +51,19 @@ class EditController(Generic[T], Controller):
             return float(value)  # type: ignore
         if self.vtype == date:
             try:
-                dt = datetime.strptime(value, "%d/%m/%Y")  # type: ignore
+                dt = datetime.strptime(value, "%d/%m/%Y")
             except ValueError:
                 dt = None
             if dt is None:
-                return None
+                return ValueError()
             return dt.date()  # type: ignore
         if self.vtype == time:
             try:
-                dt = datetime.strptime(value, "%H:%M")  # type: ignore
+                dt = datetime.strptime(value, "%H:%M")
             except ValueError:
                 dt = None
             if dt is None:
-                return None
+                return ValueError()
             return dt.time()  # type: ignore
         raise TypeError("Type not supported")
 
@@ -84,9 +82,14 @@ class EditController(Generic[T], Controller):
         self.view.oldValue = self.serialize_value(self.oldValue)
         value = self.view.render()
         if value == "":
-            self.value = self.oldValue
+            value = self.oldValue
         else:
-            self.value = self.deserialize_value(value)
+            value = self.deserialize_value(value)
+        if isinstance(value, ValueError):
+            self.view.error = "Valeur invalide, réessayé"
+            return None, None
+        else:
+            self.value = value
         return MainViewState.BACK, []
 
 

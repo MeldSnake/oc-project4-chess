@@ -28,6 +28,10 @@ class MainViewState(int, Enum):
     REPORTS_ROUNDS_MENU = 18
     REPORTS_MATCHS_MENU = 19
 
+    CHOOSE_MATCH_WINNER = -9
+    SET_MATCH_SCORE = -8
+    EDIT_TOURNAMENT_STYLE = -7
+
     SAVE_ITEM = -6
     EDIT_FIELD = -5
     BACK = -4

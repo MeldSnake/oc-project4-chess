@@ -1,9 +1,9 @@
-from typing import Any, Type
 from tinydb import TinyDB
 from chess.controllers.controller import Controller
 from chess.controllers.mainstate import MainViewState
 import chess.controllers.menucontrollers as mc
-import chess.controllers.editcontroller as ec
+import chess.controllers.menueditcontrollers as mec
+import chess.controllers.editcontrollers as ec
 from chess.models.match import Match
 from chess.models.player import Player
 from chess.models.round import Round
@@ -79,15 +79,15 @@ class MainController(Controller):
                     self.states.pop()
                     new_state = MainViewState.EDIT_PLAYER
                 case MainViewState.EDIT_PLAYER_MENU:
-                    if not isinstance(current_controller, mc.EditPlayerMenuController):
-                        current_controller = mc.EditPlayerMenuController(*self.players)
+                    if not isinstance(current_controller, mec.EditPlayerMenuController):
+                        current_controller = mec.EditPlayerMenuController(*self.players)
                     new_state, _ = current_controller.run()
-                    if new_state is not None and current_controller.selected_player is not None:
-                        self.current_player = current_controller.selected_player
+                    if new_state is not None and isinstance(current_controller.selected_item, Player):
+                        self.current_player = current_controller.selected_item
                         self.edited_data = self.current_player.copy()
                 case MainViewState.EDIT_PLAYER:
-                    if not isinstance(current_controller, mc.EditPlayerController):
-                        current_controller = mc.EditPlayerController()
+                    if not isinstance(current_controller, mec.EditPlayerController):
+                        current_controller = mec.EditPlayerController()
                     new_state, _ = current_controller.run()
                     if new_state == MainViewState.EDIT_FIELD:
                         self.edited_field = current_controller.field_edit
@@ -102,56 +102,78 @@ class MainController(Controller):
                     self.states.pop()
                     new_state = MainViewState.EDIT_TOURNAMENT
                 case MainViewState.EDIT_TOURNAMENT_MENU:
-                    if not isinstance(current_controller, mc.EditTournamentMenuController):
-                        current_controller = mc.EditTournamentMenuController(*self.tournaments)
+                    if not isinstance(current_controller, mec.EditTournamentMenuController):
+                        current_controller = mec.EditTournamentMenuController(*self.tournaments)
                     new_state, _ = current_controller.run()
-                    if new_state is not None and current_controller.selected_tournament is not None:
-                        self.current_tournament = current_controller.selected_tournament
+                    if new_state is not None and isinstance(current_controller.selected_item, Tournament):
+                        self.current_tournament = current_controller.selected_item
                         self.edited_data = self.current_tournament.copy()
                 case MainViewState.EDIT_TOURNAMENT:
-                    if not isinstance(current_controller, mc.EditTournamentController):
-                        current_controller = mc.EditTournamentController()
+                    if not isinstance(current_controller, mec.EditTournamentController):
+                        current_controller = mec.EditTournamentController()
                     new_state, _ = current_controller.run()
                     if new_state == MainViewState.EDIT_FIELD:
                         self.edited_field = current_controller.field_edit
                         self.edited_type = current_controller.vtype
                 case MainViewState.EDIT_ROUND_MENU:
-                    self.states.pop()
-                    pass
+                    if not isinstance(current_controller, mec.EditRoundMenuController):
+                        current_controller = mec.EditRoundMenuController(
+                            [x for x in self.rounds if x.tournament.model_id == self.current_tournament.model_id]
+                        )
+                    new_state, _ = current_controller.run()
+                    if new_state is not None and isinstance(current_controller.selected_item, Round):
+                        self.current_round = current_controller.selected_item
+                        self.edited_data = self.current_round.copy()
                 case MainViewState.EDIT_ROUND:
-                    self.states.pop()
-                    pass
+                    if not isinstance(current_controller, mec.EditRoundController):
+                        current_controller = mec.EditRoundController()
+                    new_state, _ = current_controller.run()
+                    if new_state == MainViewState.EDIT_FIELD:
+                        self.edited_field = current_controller.field_edit
+                        self.edited_type = current_controller.vtype
                 case MainViewState.EDIT_MATCH_MENU:
-                    self.states.pop()
-                    pass
+                    if not isinstance(current_controller, mec.EditMatchMenuController):
+                        current_controller = mec.EditRoundMenuController(
+                            [x for x in self.matchs if x.round.model_id == self.current_round.model_id]
+                        )
+                    new_state, _ = current_controller.run()
+                    if new_state is not None and isinstance(current_controller.selected_item, Match):
+                        self.current_match = current_controller.selected_item
+                        self.edited_data = self.current_match.copy()
                 case MainViewState.EDIT_MATCH:
-                    self.states.pop()
-                    pass
+                    if not isinstance(current_controller, mec.EditMatchController):
+                        current_controller = mec.EditMatchController()
+                    new_state, _ = current_controller.run()
+                    if new_state == MainViewState.EDIT_FIELD:
+                        self.edited_field = current_controller.field_edit
+                        self.edited_type = current_controller.vtype
                 case MainViewState.CONTINUE_TOURNAMENT_MENU:
-                    if not isinstance(current_controller, mc.ContinueTournamentMenuController):
-                        current_controller = mc.ContinueTournamentMenuController(
+                    if not isinstance(current_controller, mec.ContinueTournamentMenuController):
+                        current_controller = mec.ContinueTournamentMenuController(
                             *[x for x in self.tournaments if not x.finished]
                         )
                     new_state, _ = current_controller.run()
                 case MainViewState.CONTINUE_TOURNAMENT:
                     if not isinstance(current_controller, mc.ContinueTournamentController):
                         current_controller = mc.ContinueTournamentController()
+                    current_controller.is_tournament_finished = self.current_tournament.finished  # type: ignore
                     new_state, _ = current_controller.run()
                 case MainViewState.REPORTS_MENU:
                     self.states.pop()
-                    pass
                 case MainViewState.REPORTS_PLAYERS:
                     self.states.pop()
-                    pass
                 case MainViewState.REPORTS_TOURNAMENTS_MENU:
                     self.states.pop()
-                    pass
                 case MainViewState.REPORTS_ROUNDS_MENU:
                     self.states.pop()
-                    pass
                 case MainViewState.REPORTS_MATCHS_MENU:
                     self.states.pop()
-                    pass
+                case MainViewState.CHOOSE_MATCH_WINNER:
+                    self.states.pop()
+                case MainViewState.SET_MATCH_SCORE:
+                    self.states.pop()
+                case MainViewState.EDIT_TOURNAMENT_STYLE:
+                    self.states.pop()
                 case MainViewState.EDIT_FIELD:
                     if self.edited_field is None or self.edited_data is None:
                         self.states.pop()
