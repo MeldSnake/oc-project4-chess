@@ -159,6 +159,9 @@ class MainController(Controller):
                     current_controller.is_tournament_finished = self.current_tournament.finished  # type: ignore
                     new_state, _ = current_controller.run()
                 case MainViewState.REPORTS_MENU:
+                    if not isinstance(current_controller, mc.ReportsMenuController):
+                        current_controller = mc.ReportsMenuController()
+                    new_state, _ = current_controller.run()
                     self.states.pop()
                 case MainViewState.REPORTS_PLAYERS:
                     self.states.pop()
@@ -224,5 +227,8 @@ class MainController(Controller):
                     self.states.pop()
                 case MainViewState.QUIT:
                     self._clearFields()
+                case _:
+                    print("DEBUG: Etat non supporté", current_state)
+                    self.states.pop()
             if new_state is not None:
                 self.states.append(new_state)

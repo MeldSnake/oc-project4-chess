@@ -81,3 +81,27 @@ class ContinueTournamentController(MenuController):
         else:
             self.update_choices()
         return super().run()
+
+
+class ReportsMenuController(MenuController):
+    def __init__(self, /):
+        super().__init__(
+            "Raport des Joueurs par ordre alphabetic",
+            "Raport des Joueurs par classement",
+            "Raport des Tournois",
+        )
+        self.view.title = "Menu des Raports"
+        self.view.exitName = "Retour"
+        self.order = "alphabetic"
+
+    def handle_input(self, value: int):
+        if value == 0:
+            self.order = "alphabetic"
+            return MainViewState.REPORTS_PLAYERS
+        elif value == 1:
+            self.order = "ranking"
+            return MainViewState.REPORTS_PLAYERS
+        elif value == 2:
+            self.order = ""
+            return MainViewState.REPORTS_TOURNAMENTS_MENU
+        return super().handle_input(value)
