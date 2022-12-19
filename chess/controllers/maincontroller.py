@@ -13,6 +13,26 @@ from chess.models.tournament import Tournament
 
 class MainController(Controller):
 
+    MENU_RESETS = [
+        MainViewState.MAIN_MENU,
+        MainViewState.PLAYERS_MENU,
+        MainViewState.EDIT_PLAYER_MENU,
+        MainViewState.TOURNAMENTS_MENU,
+        MainViewState.EDIT_TOURNAMENT_MENU,
+        MainViewState.EDIT_TOURNAMENT,
+        MainViewState.EDIT_ROUND_MENU,
+        MainViewState.EDIT_ROUND,
+        MainViewState.EDIT_MATCH_MENU,
+        MainViewState.EDIT_MATCH,
+        MainViewState.CONTINUE_TOURNAMENT_MENU,
+        MainViewState.CONTINUE_TOURNAMENT,
+        MainViewState.REPORTS_MENU,
+        # MainViewState.REPORTS_PLAYERS,
+        MainViewState.REPORTS_TOURNAMENTS_MENU,
+        MainViewState.REPORTS_ROUNDS_MENU,
+        # MainViewState.REPORTS_MATCHS_MENU,
+    ]
+
     def __init__(self, db: TinyDB):
         self._db = db
         self.players: list[Player] = []
@@ -20,6 +40,7 @@ class MainController(Controller):
         self.rounds: list[Round] = []
         self.matchs: list[Match] = []
         self.states: list[MainViewState] = []
+        self.previous_controllers: list[Controller] = []
 
         self.current_player: Player | None = None
         self.current_tournament: Tournament | None = None
@@ -61,18 +82,24 @@ class MainController(Controller):
 
     def run(self):
         self.onLoadDatabase()
-        current_controller = None
+        self.previous_controllers: list[Controller] = []
         while len(self.states) > 0:
             current_state = self.states[-1]
+            if len(self.previous_controllers) != 0:
+                current_controller = self.previous_controllers[-1]
+            else:
+                current_controller = None
             new_state = None
             match current_state:
                 case MainViewState.MAIN_MENU:
                     if not isinstance(current_controller, mc.MainMenuController):
                         current_controller = mc.MainMenuController()
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                 case MainViewState.PLAYERS_MENU:
                     if not isinstance(current_controller, mc.PlayersMenuController):
                         current_controller = mc.PlayersMenuController()
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                 case MainViewState.NEW_PLAYER:
                     self.current_player = None
@@ -82,6 +109,7 @@ class MainController(Controller):
                 case MainViewState.EDIT_PLAYER_MENU:
                     if not isinstance(current_controller, mec.EditPlayerMenuController):
                         current_controller = mec.EditPlayerMenuController(*self.players)
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                     if new_state is not None and isinstance(current_controller.selected_item, Player):
                         self.current_player = current_controller.selected_item
@@ -96,6 +124,7 @@ class MainController(Controller):
                 case MainViewState.TOURNAMENTS_MENU:
                     if not isinstance(current_controller, mc.TournamentsMenuController):
                         current_controller = mc.TournamentsMenuController()
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                 case MainViewState.NEW_TOURNAMENT:
                     self.current_tournament = None
@@ -105,6 +134,7 @@ class MainController(Controller):
                 case MainViewState.EDIT_TOURNAMENT_MENU:
                     if not isinstance(current_controller, mec.EditTournamentMenuController):
                         current_controller = mec.EditTournamentMenuController(*self.tournaments)
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                     if new_state is not None and isinstance(current_controller.selected_item, Tournament):
                         self.current_tournament = current_controller.selected_item
@@ -121,6 +151,7 @@ class MainController(Controller):
                         current_controller = mec.EditRoundMenuController(
                             [x for x in self.rounds if x.tournament.model_id == self.current_tournament.model_id]
                         )
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                     if new_state is not None and isinstance(current_controller.selected_item, Round):
                         self.current_round = current_controller.selected_item
@@ -137,6 +168,7 @@ class MainController(Controller):
                         current_controller = mec.EditRoundMenuController(
                             [x for x in self.matchs if x.round.model_id == self.current_round.model_id]
                         )
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                     if new_state is not None and isinstance(current_controller.selected_item, Match):
                         self.current_match = current_controller.selected_item
@@ -153,6 +185,7 @@ class MainController(Controller):
                         current_controller = mec.ContinueTournamentMenuController(
                             *[x for x in self.tournaments if not x.finished]
                         )
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                 case MainViewState.CONTINUE_TOURNAMENT:
                     if not isinstance(current_controller, mc.ContinueTournamentController):
@@ -162,8 +195,8 @@ class MainController(Controller):
                 case MainViewState.REPORTS_MENU:
                     if not isinstance(current_controller, mc.ReportsMenuController):
                         current_controller = mc.ReportsMenuController()
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
-                    self.states.pop()
                 case MainViewState.REPORTS_PLAYERS:
                     if not isinstance(current_controller, ReportPlayersController):
                         if self.current_tournament is not None:
@@ -175,6 +208,7 @@ class MainController(Controller):
                 case MainViewState.REPORTS_TOURNAMENTS_MENU:
                     if not isinstance(current_controller, ReportTournamentsController):
                         current_controller = ReportTournamentsController(*self.tournaments)
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                     if new_state in [MainViewState.REPORTS_ROUNDS_MENU, MainViewState.REPORTS_PLAYERS]:
                         self.current_tournament = current_controller.selected_item  # type: ignore
@@ -187,6 +221,7 @@ class MainController(Controller):
                             current_controller = ReportRoundsController(*[x for x in self.rounds if x.tournament == self.current_tournament])
                         else:
                             current_controller = ReportRoundsController(*self.rounds)
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                     if new_state in [MainViewState.REPORTS_MATCHS_MENU, MainViewState.REPORTS_PLAYERS]:
                         self.current_round = current_controller.selected_item  # type: ignore
@@ -199,6 +234,7 @@ class MainController(Controller):
                             current_controller = ReportRoundsController()
                         else:
                             current_controller = ReportRoundsController(*self.rounds)
+                        self.previous_controllers.append(current_controller)
                     new_state, _ = current_controller.run()
                 case MainViewState.CHOOSE_MATCH_WINNER:
                     self.states.pop()
@@ -260,4 +296,6 @@ class MainController(Controller):
                     print("DEBUG: Etat non supporté", current_state)
                     self.states.pop()
             if new_state is not None:
+                if new_state in MainController.MENU_RESETS:
+                    self.previous_controllers.pop()
                 self.states.append(new_state)
