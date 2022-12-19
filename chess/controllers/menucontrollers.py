@@ -97,11 +97,11 @@ class ReportsMenuController(MenuController):
     def handle_input(self, value: int):
         if value == 0:
             self.order = "alphabetic"
-            return MainViewState.REPORTS_PLAYERS
+            return MainViewState.REPORTS_PLAYERS, []
         elif value == 1:
             self.order = "ranking"
-            return MainViewState.REPORTS_PLAYERS
+            return MainViewState.REPORTS_PLAYERS, []
         elif value == 2:
             self.order = ""
-            return MainViewState.REPORTS_TOURNAMENTS_MENU
+            return MainViewState.REPORTS_TOURNAMENTS_MENU, []
         return super().handle_input(value)

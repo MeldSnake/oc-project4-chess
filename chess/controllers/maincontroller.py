@@ -4,6 +4,7 @@ from chess.controllers.mainstate import MainViewState
 import chess.controllers.menucontrollers as mc
 import chess.controllers.menueditcontrollers as mec
 import chess.controllers.editcontrollers as ec
+from chess.controllers.reportcontrollers import ReportPlayersController, ReportRoundsController, ReportTournamentsController, ReportsMatchsController
 from chess.models.match import Match
 from chess.models.player import Player
 from chess.models.round import Round
@@ -164,13 +165,41 @@ class MainController(Controller):
                     new_state, _ = current_controller.run()
                     self.states.pop()
                 case MainViewState.REPORTS_PLAYERS:
-                    self.states.pop()
+                    if not isinstance(current_controller, ReportPlayersController):
+                        if self.current_tournament is not None:
+                            # TODO Obtain all players from the tournament
+                            current_controller = ReportPlayersController()
+                        else:
+                            current_controller = ReportPlayersController(*self.players)
+                    new_state, _ = current_controller.run()
                 case MainViewState.REPORTS_TOURNAMENTS_MENU:
-                    self.states.pop()
+                    if not isinstance(current_controller, ReportTournamentsController):
+                        current_controller = ReportTournamentsController(*self.tournaments)
+                    new_state, _ = current_controller.run()
+                    if new_state in [MainViewState.REPORTS_ROUNDS_MENU, MainViewState.REPORTS_PLAYERS]:
+                        self.current_tournament = current_controller.selected_item  # type: ignore
+                    else:
+                        self.current_tournament = None
                 case MainViewState.REPORTS_ROUNDS_MENU:
-                    self.states.pop()
+                    if not isinstance(current_controller, ReportRoundsController):
+                        if self.current_tournament is not None:
+                            # TODO Obtain all rounds from current_round
+                            current_controller = ReportRoundsController(*[x for x in self.rounds if x.tournament == self.current_tournament])
+                        else:
+                            current_controller = ReportRoundsController(*self.rounds)
+                    new_state, _ = current_controller.run()
+                    if new_state in [MainViewState.REPORTS_MATCHS_MENU, MainViewState.REPORTS_PLAYERS]:
+                        self.current_round = current_controller.selected_item  # type: ignore
+                    else:
+                        self.current_round = None
                 case MainViewState.REPORTS_MATCHS_MENU:
-                    self.states.pop()
+                    if not isinstance(current_controller, ReportsMatchsController):
+                        if self.current_tournament is not None:
+                            # TODO Obtain all matches from current_round
+                            current_controller = ReportRoundsController()
+                        else:
+                            current_controller = ReportRoundsController(*self.rounds)
+                    new_state, _ = current_controller.run()
                 case MainViewState.CHOOSE_MATCH_WINNER:
                     self.states.pop()
                 case MainViewState.SET_MATCH_SCORE:

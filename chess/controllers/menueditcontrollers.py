@@ -6,7 +6,8 @@ from chess.models.match import Match
 from chess.models.player import Player
 from chess.models.round import Round
 from chess.models.tournament import Tournament
-from chess.view.menuview import MenuItemsView, PlayerReportView, TournamentReportView
+from chess.view.menuview import MenuItemsView
+from chess.view.reportviews import MatchReportView, PlayerReportView, RoundReportView, TournamentReportView
 from chess.view.textview import TextView
 from chess.view.view import View
 
@@ -159,17 +160,14 @@ class EditRoundMenuController(ItemSelectionController[Round | str]):
         self.view.exitName = "Retour"
         self.select_state = MainViewState.EDIT_ROUND
 
-    def itemViewFactory(self, round: Round | str, idx: int):
-        if isinstance(round, str):
-            return round
+    def itemViewFactory(self, round_: Round | str, idx: int):
+        if isinstance(round_, str):
+            return round_
         # TODO Reach implementation
         return RoundReportView(
             index=idx,
-            name=round.name,
-            when=round.when,
-            where=round.where,
-            style=round.style,
-            finished=round.finished,
+            name=round_.name,
+            number=round_.number,
         )
 
     def handle_input(self, value: int):
@@ -198,11 +196,8 @@ class EditMatchMenuController(ItemSelectionController[Match | str]):
         # TODO Reach implementation
         return MatchReportView(
             index=idx,
-            name=match.name,
-            when=match.when,
-            where=match.where,
-            style=match.style,
-            finished=match.finished,
+            start_time=match.start_time,
+            end_time=match.end_time,
         )
 
     def run(self) -> MainStateReturn:
