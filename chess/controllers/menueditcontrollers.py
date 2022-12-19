@@ -214,7 +214,7 @@ class ContinueTournamentMenuController(EditTournamentMenuController):
 
 class EditField(NamedTuple):
     name: str
-    vtype: Type | None
+    vtype: Type[Any] | None
     field_name: str | None
 
 
