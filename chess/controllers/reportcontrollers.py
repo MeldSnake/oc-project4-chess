@@ -77,6 +77,7 @@ class ReportTournamentsController(ItemSelectionController[Tournament]):
     def __init__(self, *items: Tournament) -> None:
         super().__init__(*items)
         self.title = "Raports des Tournois"
+        self.view.can_save = False
 
     def itemViewFactory(self, idx: int, item: Tournament):
         return TournamentLongReportView(
@@ -97,6 +98,7 @@ class ReportRoundsController(ItemSelectionController[Round | str]):
             "Raport des Joueurs du Tournoi (num)",
         )
         self.title = "Raports des Rondes"
+        self.view.can_save = False
 
     def handle_input(self, value: int):
         if value == len(self._items):

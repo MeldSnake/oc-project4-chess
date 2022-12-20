@@ -46,7 +46,8 @@ class ItemSelectionController(Controller, Generic[T]):
         else:
             self.selected_index = -1
             self.is_invalid_input = True
-            self.invalid_view.text = "Valeur invalide, réessayé"
+            self.view.show_header = False
+            self.invalid_view.text = "Option non reconnue, réessayé"
         return None, None
 
     @overload
@@ -92,6 +93,7 @@ class ItemSelectionController(Controller, Generic[T]):
             self._items = []
             return self.quit_state, []
         else:
+            self.invalid_view.text = "Option non reconnue, réessayé"
             self.view.show_header = False
         return None, None
 
@@ -102,7 +104,7 @@ class EditPlayerMenuController(ItemSelectionController[Player]):
         self.view.can_repeat_list = False
         self.view.exitName = "Retour"
         self.view.title = "Selection du Joueur"
-        self.view.can_save = False
+        self.view.can_save = True
         self.select_state = MainViewState.EDIT_PLAYER
 
     def itemViewFactory(self, player: Player, idx: int) -> View:

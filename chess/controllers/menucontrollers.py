@@ -93,6 +93,7 @@ class ReportsMenuController(MenuController):
         self.view.title = "Menu des Raports"
         self.view.exitName = "Retour"
         self.order = "alphabetic"
+        self.view.can_save = False
 
     def handle_input(self, value: int):
         if value == 0:
