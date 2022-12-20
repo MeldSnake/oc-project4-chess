@@ -17,7 +17,7 @@ T = TypeVar('T')
 class ItemSelectionController(Controller, Generic[T]):
     @property
     def selected_item(self):
-        if self.selected_index >= 0 and self.selected_index <= len(self._items):
+        if self.selected_index >= 0 and self.selected_index < len(self._items):
             return self._items[self.selected_index]
         return None
 
@@ -40,7 +40,7 @@ class ItemSelectionController(Controller, Generic[T]):
         self.view.choices = list(map(self.itemViewFactory, self._items, range(0, len(self._items))))
 
     def handle_input(self, value: int):
-        if self.selected_index >= 0 and self.selected_index <= len(self._items):
+        if value >= 0 and value < len(self._items):
             self.selected_index = value
             return self.select_state, []
         else:
@@ -75,7 +75,6 @@ class ItemSelectionController(Controller, Generic[T]):
             self.is_invalid_input = False
             return None, None
         user_input = self.view.render()
-        self.view.show_header = False
         if user_input is None:
             return MainViewState.BACK, []
         elif user_input.isdigit():
@@ -92,6 +91,8 @@ class ItemSelectionController(Controller, Generic[T]):
             self.view.choices = []
             self._items = []
             return self.quit_state, []
+        else:
+            self.view.show_header = False
         return None, None
 
 
@@ -100,6 +101,8 @@ class EditPlayerMenuController(ItemSelectionController[Player]):
         super().__init__(*choices)
         self.view.can_repeat_list = False
         self.view.exitName = "Retour"
+        self.view.title = "Selection du Joueur"
+        self.view.can_save = False
         self.select_state = MainViewState.EDIT_PLAYER
 
     def itemViewFactory(self, player: Player, idx: int) -> View:
@@ -125,6 +128,8 @@ class EditTournamentMenuController(ItemSelectionController[Tournament | str]):
         )
         self.view.can_repeat_list = True
         self.view.exitName = "Retour"
+        self.view.title = "Selection du Tournoi"
+        self.view.can_save = False
         self.select_state = MainViewState.EDIT_TOURNAMENT
 
     def itemViewFactory(self, tournament: Tournament | str, idx: int):
@@ -158,6 +163,8 @@ class EditRoundMenuController(ItemSelectionController[Round | str]):
         )
         self.view.can_repeat_list = True
         self.view.exitName = "Retour"
+        self.view.title = "Selection d'une Ronde"
+        self.view.can_save = False
         self.select_state = MainViewState.EDIT_ROUND
 
     def itemViewFactory(self, round_: Round | str, idx: int):
@@ -188,6 +195,8 @@ class EditMatchMenuController(ItemSelectionController[Match | str]):
         )
         self.view.can_repeat_list = True
         self.view.exitName = "Retour"
+        self.view.title = "Selection d'un Match"
+        self.view.can_save = False
         self.select_state = MainViewState.EDIT_MATCH
 
     def itemViewFactory(self, match: Match | str, idx: int):
@@ -260,6 +269,7 @@ class EditPlayerController(EditController):
             EditField("Definir le genre", str, "gender"),
             EditField("Definir le classement", int, "rank"),
         )
+        self.view.title = "Modification du Joueur"
 
 
 class EditTournamentController(EditController):
@@ -271,6 +281,7 @@ class EditTournamentController(EditController):
             OutStateField("Definir le style", MainViewState.EDIT_TOURNAMENT_STYLE),
             OutStateField("Modifier une ronde du Tournoi", MainViewState.EDIT_ROUND_MENU),
         )
+        self.view.title = "Modification du Tournoi"
 
 
 class EditRoundController(EditController):
@@ -279,6 +290,7 @@ class EditRoundController(EditController):
             EditField("Definir le nom", str, "name"),
             OutStateField("Modifier un match de la ronde", MainViewState.EDIT_MATCH_MENU),
         )
+        self.view.title = "Modification de la Ronde"
 
 
 class EditMatchController(EditController):
@@ -289,3 +301,4 @@ class EditMatchController(EditController):
             OutStateField("Definir les scores", MainViewState.SET_MATCH_SCORE),
             OutStateField("Definir le vainqueur", MainViewState.CHOOSE_MATCH_WINNER),
         )
+        self.view.title = "Modification du Match"

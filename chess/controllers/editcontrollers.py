@@ -2,36 +2,9 @@ from chess.controllers.controller import Controller, MainStateReturn
 from typing import Type, TypeVar, Generic
 from datetime import date, time, datetime
 from chess.controllers.mainstate import MainViewState
-
-from chess.view.view import View
+from chess.view.editviews import EditView
 
 T = TypeVar('T', str, int, float, date, time)
-
-
-class EditView(View):
-    def __init__(self) -> None:
-        super().__init__()
-        self.oldValue: str | None = None
-        self.header = True
-        self.error: str | None = None
-        self.pre_header: str | None = None
-
-    def render(self):
-        if self.header:
-            if self.pre_header is not None:
-                print(self.pre_header)
-            if self.oldValue is not None:
-                print("Ancienne valeur: %s" % self.oldValue)
-            print("Pour annuler la modification entré une valeure vide")
-            self.header = False
-        if self.error is not None:
-            print(self.error)
-            self.error = None
-        try:
-            valeur = input("Valeur: ")
-        except (KeyboardInterrupt, EOFError):
-            valeur = ""
-        return valeur
 
 
 class EditController(Generic[T], Controller):

@@ -18,10 +18,9 @@ class MenuItemsView(View):
             print(self.err_str)
             return None
         if self.show_header:
+            View.clear_screen()
             if self.title != "" and self.title is not None:
-                print("+-" + "-" * len(self.title) + "-+")
-                print("+", self.title, "+")
-                print("+-" + "-" * len(self.title) + "-+")
+                View.render_title(self.title)
             i = 0
             for choice in self.choices:
                 if isinstance(choice, str):
@@ -29,8 +28,9 @@ class MenuItemsView(View):
                 else:
                     choice.render()
                 i += 1
+            print('----')
             if self.can_save:
-                print("s)", "Sauvegarder la base de donnée")
+                print("s)", "Sauvegarder")
             if self.can_repeat_list:
                 print("?)", "Affiche l'index des choix")
             print("q)", self.exitName)

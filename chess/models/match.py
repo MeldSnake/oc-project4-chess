@@ -23,8 +23,7 @@ class Match(Model):
                  end_time: datetime | None = None,
                  scores: tuple[float, float] = (0.0, 0.0),
                  player1: Player | None = None,
-                 player2: Player | None = None,
-                 winner: Player | None = None):
+                 player2: Player | None = None):
         super().__init__(match_id)
         self.round = mapped_round
         self.start_time = start_time
@@ -32,7 +31,6 @@ class Match(Model):
         self.scores = scores
         self.player1 = player1
         self.player2 = player2
-        self.winner = winner
 
     @classmethod
     def getTable(cls, db: TinyDB):
@@ -45,7 +43,6 @@ class Match(Model):
             'end_time': serialize_datetime(value.end_time),
             'player1': -1 if value.player1 is None else value.player1.model_id,
             'player2': -1 if value.player2 is None else value.player2.model_id,
-            'winner': -1 if value.winner is None else value.winner.model_id,
             'scores': "%f/%f" % value.scores
         }
         data.update(super().toDocument(value))
@@ -61,5 +58,4 @@ class Match(Model):
             scores=tuple(float(x) for x in document['scores'].split('/')),
             player1=Player.fromID(db, document['player1']),
             player2=Player.fromID(db, document['player2']),
-            winner=Player.fromID(db, document['winner']),
         )

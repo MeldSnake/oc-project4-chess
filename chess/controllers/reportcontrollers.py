@@ -1,13 +1,15 @@
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
+
 from chess.controllers.controller import Controller, MainStateReturn
 from chess.controllers.mainstate import MainViewState
 from chess.controllers.menueditcontrollers import ItemSelectionController
-
+from chess.models.match import Match
 from chess.models.player import Player
 from chess.models.round import Round
 from chess.models.tournament import Tournament
-from chess.models.match import Match
-from chess.view.reportviews import MatchLongReportView, PlayerReportView, RoundLongReportView, TournamentLongReportView
+from chess.view.reportviews import (MatchLongReportView, PlayerReportView,
+                                    ReportItemsView, RoundLongReportView,
+                                    TournamentLongReportView)
 from chess.view.view import View
 
 T = TypeVar('T', Player, Tournament, Round, Match)
@@ -17,25 +19,29 @@ class ReportItemsController(Generic[T], Controller):
     def __init__(self, *items: T) -> None:
         super().__init__()
         self._items = list(items)
-        self.view = Player
+        self.view = ReportItemsView()
         self.title = ""
         self.show_header = True
 
     def item_view_factory(self, idx: int, item: T) -> View:
         raise NotImplementedError()
 
-    def run(self) -> MainStateReturn:
-        if self.title != "":
-            print("+", "-" * len(self.title), "+", sep='-')
-            print("+", self.title, "+")
-            print("+", "-" * len(self.title), "+", sep='-')
+    def _generate_view_map(self):
         for idx, item in enumerate(self._items):
             view = self.item_view_factory(idx, item)
-            view.render()
+            yield view
+
+    def run(self) -> MainStateReturn:
+        self.view.itemViews = self._generate_view_map()
+        self.view.render()
         return MainViewState.BACK, []
 
 
 class ReportPlayersController(ReportItemsController[Player]):
+    def __init__(self, *items: Player) -> None:
+        super().__init__(*items)
+        self.title = "Raports des Joueurs"
+
     def item_view_factory(self, idx: int, item: Player):
         return PlayerReportView(
             last_name=item.last_name,
@@ -47,20 +53,15 @@ class ReportPlayersController(ReportItemsController[Player]):
 
 
 class ReportsMatchsController(ReportItemsController[Match]):
+    def __init__(self, *items: Match) -> None:
+        super().__init__(*items)
+        self.title = "Raports des Matchs"
 
     @classmethod
     def get_player_repr(cls, player: Player | None):
         if player is not None:
             return f"{player.first_name} {player.last_name} @{player.rank}"
         return "Auncun Joueur"
-
-    @classmethod
-    def get_winner_idx(cls, p1: Player | None, p2: Player | None, winner: Player | None):
-        if winner == p1:
-            return 0
-        elif winner == p2:
-            return 1
-        return -1
 
     def item_view_factory(self, idx: int, item: Match) -> View:
         return MatchLongReportView(
@@ -69,11 +70,14 @@ class ReportsMatchsController(ReportItemsController[Match]):
             scores=item.scores,
             player1=ReportsMatchsController.get_player_repr(item.player1),
             player2=ReportsMatchsController.get_player_repr(item.player2),
-            winner=ReportsMatchsController.get_winner_idx(item.player1, item.player2, item.winner)
         )
 
 
 class ReportTournamentsController(ItemSelectionController[Tournament]):
+    def __init__(self, *items: Tournament) -> None:
+        super().__init__(*items)
+        self.title = "Raports des Tournois"
+
     def itemViewFactory(self, idx: int, item: Tournament):
         return TournamentLongReportView(
             index=idx,
@@ -92,6 +96,7 @@ class ReportRoundsController(ItemSelectionController[Round | str]):
             "Raport des Joueurs du Tournoi (abc)",
             "Raport des Joueurs du Tournoi (num)",
         )
+        self.title = "Raports des Rondes"
 
     def handle_input(self, value: int):
         if value == len(self._items):

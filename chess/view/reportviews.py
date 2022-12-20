@@ -1,6 +1,30 @@
 import datetime
+from typing import Iterable
 from chess.models.tournament import StyleTournament
 from chess.view.view import View
+
+
+class ReportItemsView(View):
+    def __init__(self) -> None:
+        super().__init__()
+        self.title = ""
+        self.itemViews: Iterable[View] = []
+
+    def render(self):
+        View.clear_screen()
+        if self.title != "":
+            View.render_title(self.title)
+        i = 0
+        for view in self.itemViews:
+            view.render()
+            i += 1
+        if i == 0:
+            print("Auncun disponible")
+        print("-----")
+        try:
+            _ = input("Appuyer sur la touche entré pour continuer...")
+        except (KeyboardInterrupt, EOFError):
+            pass
 
 
 class PlayerReportView(View):
@@ -104,7 +128,7 @@ class MatchReportView(View):
             print(self.start_time.strftime("%d/%m/%Y %H:%M"), end='')
         if self.end_time is not None:
             print("-", self.end_time.strftime("%d/%m/%Y %H:%M"), end='')
-        if self.scores[0] == self.scores[1] and self.scores[0] == 0.0:
+        if not any(self.scores):
             print("(%f, %f), [En cours]" % self.scores, end='')
         else:
             print("(%f, %f), [Terminé]" % self.scores, end='')
@@ -171,8 +195,7 @@ class MatchLongReportView(View):
                  player2: str,
                  start_time: datetime.datetime | None = None,
                  end_time: datetime.datetime | None = None,
-                 scores=(0.0, 0.0),
-                 winner: int = -1,
+                 scores: tuple[float, float] = (0.0, 0.0),
                  ) -> None:
         super().__init__()
         self.start_time = start_time
@@ -180,16 +203,24 @@ class MatchLongReportView(View):
         self.scores = scores
         self.player1 = player1
         self.player2 = player2
-        self.winner = winner
 
     def render(self):
         print("Match:")
         if self.start_time is not None:
             print("\tDebut:", self.start_time.strftime("%d/%m/%Y %H:%M"))
         if self.end_time is not None:
-            print("\tDebut:", self.end_time.strftime("%d/%m/%Y %H:%M"))
+            print("\tFin:", self.end_time.strftime("%d/%m/%Y %H:%M"))
         print("\tScores", *self.scores)
         print("\tJoueur 1:", self.player1)
         print("\tJoueur 2:", self.player2)
-        if self.winner != -1:
-            print("\tVainqueur:", self.player1 if self.winner == 0 else self.player2)
+        if self.end_time is not None:
+            print("\tVainqueur:", end='')
+            if self.scores[0] > self.scores[1]:
+                print(self.player1)
+            elif self.scores[0] < self.scores[1]:
+                print(self.player2)
+            else:
+                print("Egalité")
+            print("Status: Terminé")
+        else:
+            print("Status: En cours")
