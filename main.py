@@ -1,9 +1,9 @@
-from tinydb import TinyDB
 from chess.controllers.maincontroller import MainController
-import pathlib
+
+from chess.database.dbadapter import DBAdapter
 
 
 if __name__ == "__main__":
-    with TinyDB(pathlib.Path("./db.json")) as db:
+    with DBAdapter() as db:
         ctrl = MainController(db)
         ctrl.run()

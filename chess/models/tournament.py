@@ -4,11 +4,7 @@ from datetime import date
 from enum import Enum
 from typing import Self
 
-from tinydb import TinyDB
-from tinydb.table import Document
-
 from chess.models.model import Model
-from chess.serializers import serialize_date
 
 
 class StyleTournament(int, Enum):
@@ -33,29 +29,20 @@ class Tournament(Model):
         self.style = style
         self.finished = finished
 
-    @classmethod
-    def getTable(cls, db: TinyDB):
-        return db.table("tournaments")
-
-    @classmethod
-    def toDocument(cls, value: Self):
-        data: dict = {
-            'name': value.name,
-            'where': value.where,
-            'when': serialize_date(value.when),
-            'style': value.style,
-            'finished': value.finished,
-        }
-        data.update(super().toDocument(value))
-        return data
-
-    @classmethod
-    def fromDocument(cls, _: TinyDB, document: Document) -> Self:
+    def __copy__(self):
         return Tournament(
-            model_id=document['id'],
-            name=document['name'],
-            where=document['where'],
-            when=document['when'],
-            style=document['style'],
-            finished=bool(document['finished']),
+            model_id=self.model_id,
+            name=self.name,
+            where=self.where,
+            when=self.when,
+            style=self.style,
+            finished=self.finished,
         )
+
+    def update(self, src: Self):
+        self.model_id = src.model_id
+        self.name = src.name
+        self.where = src.where
+        self.when = src.when
+        self.style = src.style
+        self.finished = src.finished

@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Self
 
-from tinydb import TinyDB
-from tinydb.table import Document
-
 from chess.models.model import Model
 
 if TYPE_CHECKING:
@@ -23,25 +20,16 @@ class Round(Model):
         self.number = number
         self.tournament = tournament
 
-    @classmethod
-    def getTable(cls, db: TinyDB):
-        return db.table("rounds")
-
-    @classmethod
-    def toDocument(cls, value: Self):
-        data: dict = {
-            'name': value.name,
-            'number': value.number,
-            'tid': value.tournament.model_id if value.tournament is not None else -1,
-        }
-        data.update(super().toDocument(value))
-        return data
-
-    @classmethod
-    def fromDocument(cls, db: TinyDB, document: Document):
+    def __copy__(self):
         return Round(
-            model_id=document['id'],
-            name=document["name"],
-            number=document["number"],
-            tournament=Tournament.fromID(db, document['tid'])
+            model_id=self.model_id,
+            name=self.name,
+            number=self.number,
+            tournament=self.tournament,
         )
+
+    def update(self, src: Self):
+        self.model_id = src.model_id
+        self.name = src.name
+        self.number = src.number
+        self.tournament = src.tournament
