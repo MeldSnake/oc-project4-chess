@@ -26,6 +26,9 @@ class ReportItemsController(Generic[T], Controller):
     def item_view_factory(self, idx: int, item: T) -> View:
         raise NotImplementedError()
 
+    def update_items(self, *items: T):
+        self._items = list(items)
+
     def _generate_view_map(self):
         for idx, item in enumerate(self._items):
             view = self.item_view_factory(idx, item)
@@ -78,8 +81,9 @@ class ReportTournamentsController(ItemSelectionController[Tournament]):
         super().__init__(*items)
         self.title = "Raports des Tournois"
         self.view.can_save = False
+        self.select_state = MainViewState.REPORTS_ROUNDS_MENU
 
-    def itemViewFactory(self, idx: int, item: Tournament):
+    def itemViewFactory(self, item: Tournament, idx: int):
         return TournamentLongReportView(
             index=idx,
             name=item.name,
@@ -96,15 +100,18 @@ class ReportRoundsController(ItemSelectionController[Round | str]):
             *choices,
             "Raport des Joueurs du Tournoi (abc)",
             "Raport des Joueurs du Tournoi (num)",
+            "Raport des Joueurs du Tournoi (score)",
         )
         self.title = "Raports des Rondes"
         self.view.can_save = False
 
     def handle_input(self, value: int):
-        if value == len(self._items):
-            return MainViewState.REPORTS_PLAYERS, []
-        if value == len(self._items) + 1:
-            return MainViewState.REPORTS_PLAYERS, []
+        if value == len(self._items) - 3:
+            return MainViewState.REPORTS_ALPHA_PLAYERS, []
+        if value == len(self._items) - 2:
+            return MainViewState.REPORTS_RANK_PLAYERS, []
+        if value == len(self._items) - 1:
+            return MainViewState.REPORTS_SCORE_PLAYERS, []
         return super().handle_input(value)
 
     def itemViewFactory(self, item: Round | str, idx: int):

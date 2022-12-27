@@ -59,6 +59,8 @@ class TournamentReportView(View):
                  index: int | None = None,
                  name="",
                  where="",
+                 round_count=4,
+                 round_completed=0,
                  when: datetime.date | None = None,
                  style=StyleTournament.BULLET,
                  finished=False) -> None:
@@ -123,15 +125,21 @@ class MatchReportView(View):
     def render(self):
         if self.index is not None:
             print("%d) " % self.index, end='')
-        print("Match %d:" % (self.index), end=' ')
-        if self.start_time is not None:
-            print(self.start_time.strftime("%d/%m/%Y %H:%M"), end='')
-        if self.end_time is not None:
-            print("-", self.end_time.strftime("%d/%m/%Y %H:%M"), end='')
-        if not any(self.scores):
-            print("(%f, %f), [En cours]" % self.scores, end='')
+            print("Match %d:" % (self.index), end=' ')
         else:
-            print("(%f, %f), [Terminé]" % self.scores, end='')
+            print("Match:", end=' ')
+        if self.start_time is not None:
+            print(self.start_time.strftime("%d/%m/%Y %H:%M"), end=' => ')
+            if self.end_time is not None:
+                print(self.end_time.strftime("%d/%m/%Y %H:%M"), end=' ')
+            else:
+                print("...", end=' ')
+        else:
+            print("(...)", end=' ')
+        if self.end_time is None:
+            print("(%.1f, %.1f), [En cours]" % self.scores, end='')
+        else:
+            print("(%.1f, %.1f), [Terminé]" % self.scores, end='')
         print()
 
 
