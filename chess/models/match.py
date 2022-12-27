@@ -28,6 +28,13 @@ class Match(Model):
         self.player1 = player1
         self.player2 = player2
 
+    def player_score(self, player: Player):
+        if player is self.player1:
+            return self.scores[0]
+        elif player is self.player2:
+            return self.scores[1]
+        return 0.0
+
     def __copy__(self):
         return Match(
             match_id=self.model_id,

@@ -3,6 +3,7 @@ from typing import Generator, Type, TypeVar
 from weakref import WeakSet
 
 from tinydb import TinyDB
+from tinydb.table import Document
 
 from chess.models.model import Model
 from chess.models.player import Player
@@ -64,25 +65,26 @@ class DBAdapter:
             return None
         return self.__db.table(name)
 
-    def _from_player_document(self, document: dict | None) -> Player | None:
+    def _from_player_document(self, document: Document | None) -> Player | None:
         if document is None:
             return None
-        model_id: int = document['id']
+        model_id: int = document.doc_id
         for ref_ in self._ensure_refs(Player):
             if ref_.model_id == model_id:
                 return ref_
-        return Player(
-            model_id=document['id'],
+        player = Player(
+            model_id=model_id,
             first_name=document['first_name'],
             last_name=document['last_name'],
             birthdate=deserialize_date(document['birthdate'], None),
             gender=document['gender'],
             rank=document['rank'],
         )
+        self.register_model(player)
+        return player
 
     def _to_player_document(self, player: Player):
         return {
-            'id': player.model_id,
             'first_name': player.first_name,
             'last_name': player.last_name,
             'birthdate': serialize_date(player.birthdate, ""),
@@ -90,63 +92,68 @@ class DBAdapter:
             'rank': player.rank
         }
 
-    def _from_tournament_document(self, document: dict | None) -> Tournament | None:
+    def _from_tournament_document(self, document: Document | None) -> Tournament | None:
         if document is None:
             return None
-        model_id: int = document['id']
+        model_id: int = document.doc_id
         for ref_ in self._ensure_refs(Tournament):
             if ref_.model_id == model_id:
                 return ref_
-        return Tournament(
-            model_id=document['id'],
+        tournament = Tournament(
+            model_id=model_id,
             name=document['name'],
             where=document['where'],
-            when=document['when'],
+            when=deserialize_date(document['when']),
             style=document['style'],
-            finished=bool(document['finished']),
+            round_count=document['round_count'],
         )
+        self.register_model(tournament)
+        return tournament
 
     def _to_tournament_document(self, tournament: Tournament):
         return {
-            'id': tournament.model_id,
             'name': tournament.name,
             'where': tournament.where,
             'when': serialize_date(tournament.when),
             'style': tournament.style,
+            'round_count': tournament.round_count,
             'finished': tournament.finished,
         }
 
-    def _from_round_document(self, document: dict | None) -> Round | None:
+    def _from_round_document(self, document: Document | None) -> Round | None:
         if document is None:
             return None
-        model_id: int = document['id']
+        model_id: int = document.doc_id
         for ref_ in self._ensure_refs(Round):
             if ref_.model_id == model_id:
                 return ref_
-        return Round(
-            model_id=document['id'],
+        round_ = Round(
+            model_id=model_id,
             name=document["name"],
             number=document["number"],
             tournament=self.fromID(Tournament, document['tid']),
         )
+        self.register_model(round_)
+        if round_.tournament is not None:
+            round_.tournament.rounds.append(round_)
+        return round_
 
     def _to_round_document(self, round_: Round):
         return {
-            'id': round_.model_id,
             'name': round_.name,
             'number': round_.number,
             'tid': round_.tournament.model_id if round_.tournament is not None else -1,
         }
 
-    def _from_match_document(self, document: dict | None) -> Match | None:
+    def _from_match_document(self, document: Document | None) -> Match | None:
         if document is None:
             return None
-        model_id: int = document['id']
+        model_id: int = document.doc_id
         for ref_ in self._ensure_refs(Match):
             if ref_.model_id == model_id:
                 return ref_
-        return Match(
-            match_id=document['id'],
+        match_ = Match(
+            match_id=model_id,
             mapped_round=self.fromID(Round, document['round']),
             start_time=deserialize_datetime(document['start_time'], None),
             end_time=deserialize_datetime(document['end_time'], None),
@@ -154,18 +161,22 @@ class DBAdapter:
             player1=self.fromID(Player, document['player1']),
             player2=self.fromID(Player, document['player2']),
         )
+        self.register_model(match_)
+        if match_.round is not None:
+            match_.round.matchs.append(match_)
+        return match_
 
     def _to_match_document(self, match: Match):
         return {
-            'id': match.model_id,
             'start_time': serialize_datetime(match.start_time,),
             'end_time': serialize_datetime(match.end_time),
+            'round': -1 if match.round is None else match.round.model_id,
             'player1': -1 if match.player1 is None else match.player1.model_id,
             'player2': -1 if match.player2 is None else match.player2.model_id,
-            'scores': "%f/%f" % match.scores
+            'scores': "%.1f/%.1f" % match.scores
         }
 
-    def _from_type_document(self, vtype: Type[TModel], document: dict | None) -> TModel | None:
+    def _from_type_document(self, vtype: Type[TModel], document: Document | None) -> TModel | None:
         if document is None:
             return None
         if vtype is Player:
@@ -206,7 +217,7 @@ class DBAdapter:
         for document in table.all():
             found: TModel | None = None
             for ref_ in refs:
-                if ref_.model_id == document['id']:
+                if ref_.model_id == document.doc_id:
                     found = ref_
                     break
             if found is None:
