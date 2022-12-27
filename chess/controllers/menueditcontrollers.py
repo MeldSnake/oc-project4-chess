@@ -37,7 +37,12 @@ class ItemSelectionController(Controller, Generic[T]):
     def update_choices(self, /, *choices: T):
         self.selected_index = -1
         self._items = list(choices)
-        self.view.choices = list(map(self.itemViewFactory, self._items, range(0, len(self._items))))
+        self.view.choices = list(
+            filter(
+                lambda x: x is not None,
+                map(self.itemViewFactory, self._items, range(0, len(self._items)))
+            )
+        )  # type: ignore
 
     def handle_input(self, value: int):
         if value >= 0 and value < len(self._items):
@@ -51,11 +56,11 @@ class ItemSelectionController(Controller, Generic[T]):
         return None, None
 
     @overload
-    def itemViewFactory(self, value: str | int | float, idx: int) -> str: ...
+    def itemViewFactory(self, value: str | int | float, idx: int) -> str | None: ...
     @overload
-    def itemViewFactory(self, value: Any, idx: int) -> View: ...
+    def itemViewFactory(self, value: Any, idx: int) -> View | None: ...
 
-    def itemViewFactory(self, value: T, idx: int) -> str | View:
+    def itemViewFactory(self, value: T, idx: int) -> str | View | None:
         if isinstance(value, (str, int, float)):
             return str(value)
         raise NotImplementedError("itemViewFactory not properly implemented for MenuItemController subclass")
@@ -96,6 +101,80 @@ class ItemSelectionController(Controller, Generic[T]):
             self.invalid_view.text = "Option non reconnue, réessayé"
             self.view.show_header = False
         return None, None
+
+
+class PlayerSelectionController(ItemSelectionController[Player]):
+    def itemViewFactory(self, value: Player | str, idx: int) -> str | View:
+        if isinstance(value, (str, int, float)):
+            return str(value)
+        return PlayerReportView(
+            index=idx,
+            last_name=value.last_name,
+            first_name=value.first_name,
+            birthdate=value.birthdate,
+            gender=value.gender,
+            rank=value.rank,
+        )
+
+
+class TournamentSelectionController(ItemSelectionController[Tournament]):
+    def __init__(self, *tournaments: Tournament):
+        super().__init__(*tournaments)
+        self.view.title = "Selection de tournoi"
+        self.view.exitName = "Retour"
+        self.view.can_repeat_list = False
+        self.view.can_save = False
+
+    def itemViewFactory(self, value: Tournament | str, idx: int) -> str | View:
+        if isinstance(value, (str, int, float)):
+            return str(value)
+        return TournamentReportView(
+            index=idx,
+            finished=value.finished,
+            name=value.name,
+            round_completed=len([x for x in value.rounds if x.finished]),
+            round_count=value.round_count,
+            style=value.style,
+            when=value.when,
+            where=value.where,
+        )
+
+
+class RoundSelectionController(ItemSelectionController[Round]):
+    def __init__(self, *rounds: Round):
+        super().__init__(*rounds)
+        self.view.title = "Selection de ronde"
+        self.view.exitName = "Retour"
+        self.view.can_repeat_list = False
+        self.view.can_save = False
+
+    def itemViewFactory(self, value: Round | str, idx: int) -> str | View:
+        if isinstance(value, (str, int, float)):
+            return str(value)
+        return RoundReportView(
+            index=idx,
+            name=value.name,
+            number=value.number,
+        )
+
+
+class MatchSelectionController(ItemSelectionController[Match]):
+    def __init__(self, *matchs: Match):
+        super().__init__(*matchs)
+        self.view.title = "Selection de match"
+        self.view.exitName = "Retour"
+        self.view.can_repeat_list = False
+        self.view.can_save = False
+
+    def itemViewFactory(self, value: Match | str, idx: int) -> str | View:
+        if isinstance(value, (str, int, float)):
+            return str(value)
+        return MatchReportView(
+            index=idx,
+            start_time=value.start_time,
+            end_time=value.end_time,
+            scores=value.scores,
+        )
 
 
 class EditPlayerMenuController(ItemSelectionController[Player]):
@@ -146,11 +225,6 @@ class EditTournamentMenuController(ItemSelectionController[Tournament | str]):
             finished=tournament.finished,
         )
 
-    def handle_input(self, value: int):
-        if value == len(self._items):
-            return MainViewState.EDIT_ROUND_MENU, []
-        return super().handle_input(value)
-
     def run(self) -> MainStateReturn:
         if len(self._items) == 0:
             self.view.err_str = "\r\nPas de tournoi existant\r\n"
@@ -159,10 +233,7 @@ class EditTournamentMenuController(ItemSelectionController[Tournament | str]):
 
 class EditRoundMenuController(ItemSelectionController[Round | str]):
     def __init__(self, /, *choices: Round):
-        super().__init__(
-            *choices,
-            "Modifier un round du Match",
-        )
+        super().__init__(*choices)
         self.view.can_repeat_list = True
         self.view.exitName = "Retour"
         self.view.title = "Selection d'une Ronde"
@@ -178,11 +249,6 @@ class EditRoundMenuController(ItemSelectionController[Round | str]):
             name=round_.name,
             number=round_.number,
         )
-
-    def handle_input(self, value: int):
-        if value == len(self._items):
-            return MainViewState.EDIT_MATCH_MENU, []
-        return super().handle_input(value)
 
     def run(self) -> MainStateReturn:
         if len(self._items) == 0:
@@ -209,6 +275,7 @@ class EditMatchMenuController(ItemSelectionController[Match | str]):
             index=idx,
             start_time=match.start_time,
             end_time=match.end_time,
+            scores=match.scores,
         )
 
     def run(self) -> MainStateReturn:
@@ -282,8 +349,12 @@ class EditTournamentController(EditController):
             EditField("Definir la date", date, "when"),
             OutStateField("Definir le style", MainViewState.EDIT_TOURNAMENT_STYLE),
             OutStateField("Modifier une ronde du Tournoi", MainViewState.EDIT_ROUND_MENU),
+            OutStateField("Demarrer/Continuer ce tournoi", MainViewState.CONTINUE_TOURNAMENT),
         )
         self.view.title = "Modification du Tournoi"
+
+    def handle_input(self, value: int):
+        return super().handle_input(value)
 
 
 class EditRoundController(EditController):

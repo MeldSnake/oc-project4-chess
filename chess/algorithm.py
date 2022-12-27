@@ -1,6 +1,64 @@
+import datetime
+from chess.models.match import Match
 from chess.models.player import Player
+from chess.models.round import Round
 from chess.models.tournament import Tournament
 
 
-def swiss_system_tournament(tournament: Tournament, players: list[Player]):
-    pass
+class SwissSystem:
+
+    def __init__(self, tournament: Tournament) -> None:
+        self.tournament: Tournament = tournament
+        if len(self.tournament.rounds) > 0 and len(self.tournament.rounds) < self.tournament.round_count:
+            self.round = self.tournament.rounds[0]
+        else:
+            self.round = None
+
+    def _has_already_fought(self, player1: Player, player2: Player):
+        for round_ in self.tournament.rounds:
+            for match in round_.matchs:
+                if match.player1 is player1 or match.player2 is player1:
+                    if match.player1 is player2 or match.player2 is player2:
+                        return True
+        return False
+
+    def _create_matches(self, round_: Round, players: list[Player]):
+        while players != []:
+            p1 = players.pop()
+            for p2 in players:
+                if not self._has_already_fought(p1, p2):
+                    round_.matchs.append(Match(
+                        mapped_round=round_,
+                        start_time=datetime.datetime.now(),
+                        end_time=None,
+                        player1=p1,
+                        player2=p2,
+                    ))
+                    players.remove(p2)
+                    break
+
+    def _create_round(self, players: list[Player] | None = None):
+        self.round = Round(
+            name=f"Round {len(self.tournament.rounds) + 1}",
+            number=len(self.tournament.rounds) + 1,
+            tournament=self.tournament,
+        )
+        if players is None:
+            players = list(map(lambda x: x[0], sorted(self.tournament.scores.items(), key=lambda x: (x[1], x[0].rank))))
+        higher_half = players[:len(players) // 2]
+        lower_half = players[len(players) // 2:]
+        self._create_matches(self.round, higher_half)
+        self._create_matches(self.round, lower_half)
+        self.tournament.rounds.append(self.round)
+
+    def first_round(self, players: list[Player]):
+        if self.tournament.rounds != []:
+            return
+        self._create_round(players)
+        return self.round
+
+    def next_round(self):
+        if self.tournament.round_count == len(self.tournament.rounds):
+            return None
+        self._create_round()
+        return self.round
