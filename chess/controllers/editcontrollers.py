@@ -2,6 +2,8 @@ from chess.controllers.controller import Controller, MainStateReturn
 from typing import Type, TypeVar, Generic
 from datetime import date, time, datetime
 from chess.controllers.mainstate import MainViewState
+from chess.controllers.menueditcontrollers import ItemSelectionController
+from chess.models.tournament import StyleTournament
 from chess.view.editviews import EditView
 
 T = TypeVar('T', str, int, float, date, time)
@@ -82,17 +84,20 @@ class EditDatetimeController(Controller):
         self.view_date = EditView()
         self.view_date.pre_header = "Definition de la partie date"
         self.view_time = EditView()
-        self.view_date.pre_header = "Definition de la partie heure"
+        self.view_time.pre_header = "Definition de la partie heure"
 
     def run(self) -> MainStateReturn:
+        if isinstance(self.oldValue, time):
+            self.date = datetime.today()
+            self.state = 1
+        elif isinstance(self.oldValue, date) and self.state != 0:
+            self.state = 0
+            self.time = datetime.now().time()
+            return MainViewState.BACK, []
         if self.state == 0:
             self.view_date.oldValue = self.oldValue.strftime("%d/%m/%Y") if self.oldValue is not None else None
             value = self.view_date.render()
-            if value == "annuler":
-                self.date = None
-                self.time = None
-                return MainViewState.BACK, []
-            else:
+            if value != "":
                 try:
                     value = datetime.strptime(value, "%d/%m/%Y")
                 except ValueError:
@@ -102,14 +107,16 @@ class EditDatetimeController(Controller):
                     self.state = 1
                     self.view_date.header = True
                 else:
-                    self.view_date.error = "Valeur invalide, verifié que la valeur entrée correspond au format JJ/MM/AAAA, réessayé"
+                    self.view_date.error = "Valeur invalide, verifiez que la valeur entrée correspond au format JJ/MM/AAAA, réessayez"
+            else:
+                if self.oldValue is None:
+                    self.date = datetime.now().date()
+                else:
+                    self.date = self.oldValue.date()
         elif self.state == 1:
             self.view_time.oldValue = self.oldValue.strftime("%H:%M") if self.oldValue is not None else None
             value = self.view_date.render()
-            if value == "annuler":
-                self.state = 0
-                self.view_time.header = True
-            else:
+            if value != "":
                 try:
                     value = datetime.strptime(value, "%H:%M")
                 except ValueError:
@@ -120,5 +127,35 @@ class EditDatetimeController(Controller):
                     self.view_time.header = True
                     return MainViewState.BACK, []
                 else:
-                    self.view_date.error = "Valeur invalide, verifié que la valeur entrée correspond au format HH:MM, réessayé"
+                    self.view_date.error = "Valeur invalide, verifiez que la valeur entrée correspond au format HH:MM, réessayez"
+            else:
+                if self.oldValue is None:
+                    self.time = datetime.now().time()
+                else:
+                    self.time = self.oldValue.time()
         return None, None
+
+
+class EditTournamentStyleController(ItemSelectionController[str]):
+
+    @property
+    def value(self):
+        if self.selected_index == 1:
+            return StyleTournament.FAST_STRIKE
+        elif self.selected_index == 2:
+            return StyleTournament.BLITZ
+        return self.oldValue
+
+    def __init__(self, /, *choices: T):
+        super().__init__(
+            "Bullet",
+            "Coup rapide",
+            "Blitz",
+        )
+        self.oldValue: StyleTournament = StyleTournament.BULLET
+        self.view.can_repeat_list = False
+        self.view.can_save = False
+
+    def run(self):
+        self.view.exitName = f"Valeure par defaut: {StyleTournament(self.oldValue).name}"
+        return super().run()

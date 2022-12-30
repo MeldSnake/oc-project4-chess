@@ -177,7 +177,7 @@ class MainController(Controller):
 
     def _unsupported(self):
         """Default behaviour when an unknown/non-implemented state """
-        assert False, "Etat non supporté"
+        assert False, "Etat non supporté {}".format(self.states[-1].name)
         self.states.pop()
         return None
 
@@ -212,9 +212,13 @@ class MainController(Controller):
         if self.edited_field is None or self.edited_data is None:
             self.states.pop()
         else:
-            if self.edited_field in ["start_time", "end_time"]:
+            if self.edited_field in ["start_time", "end_time", "when"]:
                 if not isinstance(current_controller, ec.EditDatetimeController):
                     current_controller = ec.EditDatetimeController()
+                    self.previous_controllers.append(current_controller)
+            elif self.edited_field in ["style"]:
+                if not isinstance(current_controller, ec.EditTournamentStyleController):
+                    current_controller = ec.EditTournamentStyleController()
                     self.previous_controllers.append(current_controller)
             else:
                 if not isinstance(current_controller, ec.EditController):
