@@ -118,6 +118,8 @@ class ContinueStartedRoundController(MenuController):
             "Terminer la ronde en cours",
         )
         self.system = system
+        self._report_matchs = rc.ReportsMatchsController()
+        self._report_matchs.view.no_input = True
 
     def handle_input(self, value: int):
         if value == 0:
@@ -125,6 +127,8 @@ class ContinueStartedRoundController(MenuController):
         return super().handle_input(value)
 
     def run(self) -> MainStateReturn:
+        self._report_matchs.update_choices(*self.system.tournament.rounds[-1].matchs)
+        self._report_matchs.run()
         return super().run()
 
 
@@ -134,7 +138,8 @@ class ContinueFinishedRoundController(MenuController):
             "Demarrer la ronde suivante",
         )
         self.system = system
-        self.reports_controller = rc.ReportsMatchsController()
+        self._report_matchs = rc.ReportsMatchsController()
+        self._report_matchs.view.no_input = True
 
     def handle_input(self, value: int):
         if value == 0:
@@ -142,8 +147,8 @@ class ContinueFinishedRoundController(MenuController):
         return super().handle_input(value)
 
     def run(self) -> MainStateReturn:
-        self.reports_controller.update_items(*self.system.tournament.rounds[-1].matchs)
-        self.reports_controller.run()
+        self._report_matchs.update_choices(*self.system.tournament.rounds[-1].matchs)
+        self._report_matchs.run()
         return super().run()
 
 
@@ -194,7 +199,7 @@ class WinnerChooserController(ItemSelectionController[Player | str | None]):
         self.view.can_save = False
         self.view.can_repeat_list = False
 
-    def itemViewFactory(self, value: Player | None, idx: int) -> str | View | None:
+    def item_view_factory(self, value: Player | None, idx: int) -> str | View | None:
         if isinstance(value, (str, int, float)):
             return str(value)
         if value is None:

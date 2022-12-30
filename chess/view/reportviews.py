@@ -1,30 +1,6 @@
 import datetime
-from typing import Iterable
 from chess.models.tournament import StyleTournament
 from chess.view.view import View
-
-
-class ReportItemsView(View):
-    def __init__(self) -> None:
-        super().__init__()
-        self.title = ""
-        self.itemViews: Iterable[View] = []
-
-    def render(self):
-        View.clear_screen()
-        if self.title != "":
-            View.render_title(self.title)
-        i = 0
-        for view in self.itemViews:
-            view.render()
-            i += 1
-        if i == 0:
-            print("Auncun disponible")
-        print("-----")
-        try:
-            _ = input("Appuyer sur la touche entré pour continuer...")
-        except (KeyboardInterrupt, EOFError):
-            pass
 
 
 class PlayerReportView(View):

@@ -1,6 +1,3 @@
-from typing import Generic, TypeVar
-
-from chess.controllers.controller import Controller, MainStateReturn
 from chess.controllers.mainstate import MainViewState
 from chess.controllers.menueditcontrollers import ItemSelectionController
 from chess.models.match import Match
@@ -8,44 +5,20 @@ from chess.models.player import Player
 from chess.models.round import Round
 from chess.models.tournament import Tournament
 from chess.view.reportviews import (MatchLongReportView, PlayerReportView,
-                                    ReportItemsView, RoundLongReportView,
+                                    RoundLongReportView,
                                     TournamentLongReportView)
 from chess.view.view import View
 
-T = TypeVar('T', Player, Tournament, Round, Match)
 
-
-class ReportItemsController(Generic[T], Controller):
-    def __init__(self, *items: T) -> None:
-        super().__init__()
-        self._items = list(items)
-        self.view = ReportItemsView()
-        self.title = ""
-        self.show_header = True
-
-    def item_view_factory(self, idx: int, item: T) -> View:
-        raise NotImplementedError()
-
-    def update_items(self, *items: T):
-        self._items = list(items)
-
-    def _generate_view_map(self):
-        for idx, item in enumerate(self._items):
-            view = self.item_view_factory(idx, item)
-            yield view
-
-    def run(self) -> MainStateReturn:
-        self.view.itemViews = self._generate_view_map()
-        self.view.render()
-        return MainViewState.BACK, []
-
-
-class ReportPlayersController(ReportItemsController[Player]):
+class ReportPlayersController(ItemSelectionController[Player]):
     def __init__(self, *items: Player) -> None:
         super().__init__(*items)
-        self.title = "Raports des Joueurs"
+        self.view.title = "Raports des Joueurs"
+        self.view.can_save = False
+        self.view.can_repeat_list = False
+        self.view.empty_text = "Auncun Joueur Disponible"
 
-    def item_view_factory(self, idx: int, item: Player):
+    def item_view_factory(self, item: Player, idx: int):
         return PlayerReportView(
             last_name=item.last_name,
             first_name=item.first_name,
@@ -55,10 +28,13 @@ class ReportPlayersController(ReportItemsController[Player]):
         )
 
 
-class ReportsMatchsController(ReportItemsController[Match]):
+class ReportsMatchsController(ItemSelectionController[Match]):
     def __init__(self, *items: Match) -> None:
         super().__init__(*items)
-        self.title = "Raports des Matchs"
+        self.view.title = "Raports des Matchs"
+        self.view.can_save = False
+        self.view.can_repeat_list = False
+        self.view.empty_text = "Auncun Match Disponible"
 
     @classmethod
     def get_player_repr(cls, player: Player | None):
@@ -66,7 +42,7 @@ class ReportsMatchsController(ReportItemsController[Match]):
             return f"{player.first_name} {player.last_name} @{player.rank}"
         return "Auncun Joueur"
 
-    def item_view_factory(self, idx: int, item: Match) -> View:
+    def item_view_factory(self, item: Match, idx: int) -> View:
         return MatchLongReportView(
             start_time=item.start_time,
             end_time=item.end_time,
@@ -81,9 +57,11 @@ class ReportTournamentsController(ItemSelectionController[Tournament]):
         super().__init__(*items)
         self.title = "Raports des Tournois"
         self.view.can_save = False
+        self.view.can_repeat_list = False
+        self.view.empty_text = "Auncun Tournoi Disponible"
         self.select_state = MainViewState.REPORTS_ROUNDS_MENU
 
-    def itemViewFactory(self, item: Tournament, idx: int):
+    def item_view_factory(self, item: Tournament, idx: int):
         return TournamentLongReportView(
             index=idx,
             name=item.name,
@@ -104,6 +82,8 @@ class ReportRoundsController(ItemSelectionController[Round | str]):
         )
         self.title = "Raports des Rondes"
         self.view.can_save = False
+        self.view.can_repeat_list = False
+        self.view.empty_text = "Auncune Ronde Disponible"
 
     def handle_input(self, value: int):
         if value == len(self._items) - 3:
@@ -114,7 +94,7 @@ class ReportRoundsController(ItemSelectionController[Round | str]):
             return MainViewState.REPORTS_SCORE_PLAYERS, []
         return super().handle_input(value)
 
-    def itemViewFactory(self, item: Round | str, idx: int):
+    def item_view_factory(self, item: Round | str, idx: int):
         if isinstance(item, str):
             return item
         return RoundLongReportView(
