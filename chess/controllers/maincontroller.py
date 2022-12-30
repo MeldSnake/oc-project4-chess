@@ -67,19 +67,22 @@ class MainController(Controller):
         """Called upon requesting a database load, this also reset the states to the MAIN_MENU"""
         self._clearFields()
 
-        self.players = list(self._db.all(Player))
-        self.tournaments = list(self._db.all(Tournament))
-        self.rounds = list(self._db.all(Round))
-        self.matchs = list(self._db.all(Match))
+        with self._db as db:
+            self.players = list(db.all(Player))
+            self.tournaments = list(db.all(Tournament))
+            self.rounds = list(db.all(Round))
+            self.matchs = list(db.all(Match))
 
         self.states.append(MainViewState.MAIN_MENU)
 
     def onSaveDatabase(self, *_):
         """Called upon requesting a database save"""
-        self._db.save(*self.players)
-        self._db.save(*self.tournaments)
-        self._db.save(*self.rounds)
-        self._db.save(*self.matchs)
+
+        with self._db as db:
+            db.save(*self.players)
+            db.save(*self.tournaments)
+            db.save(*self.rounds)
+            db.save(*self.matchs)
 
     def run(self):
         """Main loop that runs all sub controllers and contains the root logic"""
@@ -584,6 +587,7 @@ class MainController(Controller):
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
         if new_state == MainViewState.EDIT_FIELD:
+            self.edited_data = self.current_round
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
         if new_state == MainViewState.BACK:
@@ -767,8 +771,6 @@ MAPPED_STATE_METHODS = {
 
     MainViewState.CHOOSE_MATCH_WINNER: MainController._choose_winner,
     # TODO Missing
-    # case MainViewState.CHOOSE_MATCH_WINNER:
-    # case MainViewState.SET_MATCH_SCORE:
     # case MainViewState.EDIT_TOURNAMENT_STYLE:
 }
 """Map all available consollers with their method counterpart"""

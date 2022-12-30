@@ -243,7 +243,6 @@ class EditRoundMenuController(ItemSelectionController[Round | str]):
     def itemViewFactory(self, round_: Round | str, idx: int):
         if isinstance(round_, str):
             return round_
-        # TODO Reach implementation
         return RoundReportView(
             index=idx,
             name=round_.name,
@@ -270,7 +269,6 @@ class EditMatchMenuController(ItemSelectionController[Match | str]):
     def itemViewFactory(self, match: Match | str, idx: int):
         if isinstance(match, str):
             return match
-        # TODO Reach implementation
         return MatchReportView(
             index=idx,
             start_time=match.start_time,

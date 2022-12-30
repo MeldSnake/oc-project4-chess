@@ -131,22 +131,13 @@ class ContinueController(Controller):
                     if self.menu_controller.finished_round:
                         self.state = ContinueControllerState.FINISH_ROUND
                         self.tournament_system.next_round()
-                # TODO Menu FinishROundMenuController
-            # IF
-            # Create new round
             if not isinstance(self.menu_controller, StartTournamentController):
-                self.menu_controller = StartTournamentController()
+                self.menu_controller = StartTournamentController(self.tournament_system.tournament)
             self.menu_controller.run()
-            # TODO self.menu_controller.selected_index
-            # TODO Add Start next round and finish current round
-            # ELSE
-            # Finish the round
             if not isinstance(self.menu_controller, FinishRoundMenuController):
-                self.menu_controller = FinishRoundMenuController()
+                self.menu_controller = FinishRoundMenuController(self.tournament_system.tournament)
             self.menu_controller.run()
-            # TODO self.menu_controller.selected_index
             if len(self.tournament_system.tournament.rounds) == self.tournament_system.tournament.round_count:
-                # Mark tournament as finished
                 pass
         return None, None
 
