@@ -554,13 +554,12 @@ class MainController(Controller):
             current_controller = mec.EditMatchController()
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
+        self.edited_data = self.current_match
         if new_state == MainViewState.EDIT_FIELD:
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
-        elif new_state == MainViewState.CHOOSE_MATCH_WINNER:
-            self.edited_data = self.current_match
-            self.edited_type = Match
         if new_state == MainViewState.BACK:
+            self.current_match = None
             self.previous_controllers.pop()
         return new_state
 
@@ -590,11 +589,12 @@ class MainController(Controller):
             current_controller = mec.EditRoundController()
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
+        self.edited_data = self.current_round
         if new_state == MainViewState.EDIT_FIELD:
-            self.edited_data = self.current_round
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
         if new_state == MainViewState.BACK:
+            self.edited_data = self.current_tournament
             self.previous_controllers.pop()
         return new_state
 
@@ -622,10 +622,13 @@ class MainController(Controller):
             current_controller = mec.EditTournamentController()
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
+        self.edited_data = self.current_tournament
         if new_state == MainViewState.EDIT_FIELD:
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
         if new_state == MainViewState.BACK:
+            self.edited_data = None
+            self.current_tournament = None
             self.previous_controllers.pop()
         return new_state
 
@@ -670,8 +673,11 @@ class MainController(Controller):
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
         if new_state == MainViewState.EDIT_FIELD:
+            self.edited_data = self.current_player
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
+        elif new_state == MainViewState.BACK:
+            self.edited_data = None
         if new_state is not None:
             self.previous_controllers.pop()
         return new_state
