@@ -157,21 +157,25 @@ class MainController(Controller):
         if old_state == MainViewState.EDIT_PLAYER:
             if self.current_player is None:
                 self.players.append(self.edited_data)  # type: ignore
+                self.current_player = self.edited_data  # type: ignore
             else:
                 self.current_player.update(self.edited_data)  # type: ignore
         elif old_state == MainViewState.EDIT_TOURNAMENT:
             if self.current_tournament is None:
                 self.tournaments.append(self.edited_data)  # type: ignore
+                self.current_tournament = self.edited_data  # type: ignore
             else:
                 self.current_tournament.update(self.edited_data)  # type: ignore
         elif old_state == MainViewState.EDIT_ROUND:
             if self.current_round is None:
                 self.rounds.append(self.edited_data)  # type: ignore
+                self.current_round = self.edited_data  # type: ignore
             else:
                 self.current_round.update(self.edited_data)  # type: ignore
         elif old_state == MainViewState.EDIT_MATCH:
             if self.current_match is None:
                 self.matchs.append(self.edited_data)  # type: ignore
+                self.current_match = self.edited_data  # type: ignore
             else:
                 self.current_match.update(self.edited_data)  # type: ignore
 
@@ -673,7 +677,8 @@ class MainController(Controller):
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
         if new_state == MainViewState.EDIT_FIELD:
-            self.edited_data = self.current_player
+            if self.current_player is not None:
+                self.edited_data = self.current_player
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
         elif new_state == MainViewState.BACK:
