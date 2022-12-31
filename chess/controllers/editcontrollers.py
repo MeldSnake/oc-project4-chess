@@ -73,7 +73,7 @@ class EditDatetimeController(Controller):
     def value(self):
         if self.date is not None and self.time is not None:
             return datetime.combine(self.date, self.time)
-        return None
+        return self.oldValue
 
     def __init__(self) -> None:
         super().__init__()
@@ -109,13 +109,12 @@ class EditDatetimeController(Controller):
                 else:
                     self.view_date.error = "Valeur invalide, verifiez que la valeur entrée correspond au format JJ/MM/AAAA, réessayez"
             else:
-                if self.oldValue is None:
-                    self.date = datetime.now().date()
-                else:
-                    self.date = self.oldValue.date()
+                self.view_date.header = True
+                self.date = None
+                return MainViewState.BACK, []
         elif self.state == 1:
             self.view_time.oldValue = self.oldValue.strftime("%H:%M") if self.oldValue is not None else None
-            value = self.view_date.render()
+            value = self.view_time.render()
             if value != "":
                 try:
                     value = datetime.strptime(value, "%H:%M")
@@ -127,12 +126,12 @@ class EditDatetimeController(Controller):
                     self.view_time.header = True
                     return MainViewState.BACK, []
                 else:
-                    self.view_date.error = "Valeur invalide, verifiez que la valeur entrée correspond au format HH:MM, réessayez"
+                    self.view_time.error = "Valeur invalide, verifiez que la valeur entrée correspond au format HH:MM, réessayez"
             else:
-                if self.oldValue is None:
-                    self.time = datetime.now().time()
-                else:
-                    self.time = self.oldValue.time()
+                self.view_time.header = True
+                self.time = None
+                self.state = 0
+                return None, None
         return None, None
 
 

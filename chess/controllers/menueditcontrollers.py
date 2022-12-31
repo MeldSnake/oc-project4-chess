@@ -354,7 +354,6 @@ class EditTournamentController(EditController):
             EditField("Definir la date", date, "when"),
             EditField("Definir le style", StyleTournament, "style"),
             OutStateField("Modifier une ronde du Tournoi", MainViewState.EDIT_ROUND_MENU),
-            OutStateField("Demarrer/Continuer ce tournoi", MainViewState.CONTINUE_TOURNAMENT),
         )
         self.view.title = "Modification du Tournoi"
 

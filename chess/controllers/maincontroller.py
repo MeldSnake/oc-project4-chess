@@ -558,7 +558,7 @@ class MainController(Controller):
             current_controller = mec.EditMatchController()
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
-        self.edited_data = self.current_match
+        self.edited_data = self.current_match or self.edited_data
         if new_state == MainViewState.EDIT_FIELD:
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
@@ -593,7 +593,10 @@ class MainController(Controller):
             current_controller = mec.EditRoundController()
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
-        self.edited_data = self.current_round
+        self.edited_data = self.current_round or self.edited_data
+        if not isinstance(self.edited_data, Round):
+            if isinstance(self.edited_data, Match):
+                self.edited_data = self.edited_data.mapped_round
         if new_state == MainViewState.EDIT_FIELD:
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
@@ -626,7 +629,10 @@ class MainController(Controller):
             current_controller = mec.EditTournamentController()
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
-        self.edited_data = self.current_tournament
+        self.edited_data = self.current_tournament or self.edited_data
+        if not isinstance(self.edited_data, Tournament):
+            if isinstance(self.edited_data, Round):
+                self.edited_data = self.edited_data.tournament
         if new_state == MainViewState.EDIT_FIELD:
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
@@ -677,8 +683,7 @@ class MainController(Controller):
             self.previous_controllers.append(current_controller)
         new_state, _ = current_controller.run()
         if new_state == MainViewState.EDIT_FIELD:
-            if self.current_player is not None:
-                self.edited_data = self.current_player
+            self.edited_data = self.current_match or self.edited_data
             self.edited_field = current_controller.field_edit
             self.edited_type = current_controller.vtype
         elif new_state == MainViewState.BACK:
