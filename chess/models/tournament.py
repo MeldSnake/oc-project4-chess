@@ -53,7 +53,7 @@ class Tournament(Model):
         super().__init__(model_id)
         self.name = name
         self.where = where
-        self.when = when
+        self.when = when or date(1, 1, 1)
         self.style = style
         self.round_count = round_count
         self.rounds: list[Round] = list(rounds)

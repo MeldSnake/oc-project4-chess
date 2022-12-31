@@ -79,7 +79,7 @@ class EditDatetimeController(Controller):
         super().__init__()
         self.date: date | None = None
         self.time: time | None = None
-        self.oldValue: datetime | None = None
+        self.oldValue: date | time | datetime | None = None
         self.state = 0
         self.view_date = EditView()
         self.view_date.pre_header = "Definition de la partie date"
@@ -95,7 +95,7 @@ class EditDatetimeController(Controller):
             self.time = datetime.now().time()
             return MainViewState.BACK, []
         if self.state == 0:
-            self.view_date.oldValue = self.oldValue.strftime("%d/%m/%Y") if self.oldValue is not None else None
+            self.view_date.oldValue = self.oldValue.strftime("%d/%m/%Y") if self.oldValue != date(1, 1, 1) else None
             value = self.view_date.render()
             if value != "":
                 try:

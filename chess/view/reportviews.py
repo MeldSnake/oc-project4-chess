@@ -47,6 +47,8 @@ class TournamentReportView(View):
         self.when = when
         self.style = style
         self.finished = finished
+        self.round_completed = round_completed
+        self.round_count = round_count
 
     def render(self):
         if self.index is not None:
@@ -66,7 +68,7 @@ class TournamentReportView(View):
         if self.finished:
             print(", [Terminé]", end='')
         else:
-            print(", [En cours]", end='')
+            print(", [En cours %d/%d]" % (self.round_completed, self.round_count), end='')
         print()
 
 

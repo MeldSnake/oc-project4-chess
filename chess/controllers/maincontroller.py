@@ -410,6 +410,9 @@ class MainController(Controller):
             self.matchs.extend(self.current_round.matchs)  # type: ignore
             self.selected_players = []
             self.states.pop()
+            self.states.append(state)
+            self.edited_data = self.current_round
+            state = MainViewState.EDIT_ROUND
         if state == MainViewState.BACK:
             self.states.pop()
             self.selected_players = []

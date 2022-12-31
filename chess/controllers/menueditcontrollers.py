@@ -229,6 +229,8 @@ class EditTournamentMenuController(ItemSelectionController[Tournament | str]):
             where=tournament.where,
             style=tournament.style,
             finished=tournament.finished,
+            round_count=tournament.round_count,
+            round_completed=len([x for x in tournament.rounds if x.finished]),
         )
 
     def run(self) -> MainStateReturn:
@@ -353,6 +355,7 @@ class EditTournamentController(EditController):
             EditField("Definir le lieu", str, "where"),
             EditField("Definir la date", date, "when"),
             EditField("Definir le style", StyleTournament, "style"),
+            EditField("Definir le nombre de round", int, "round_count"),
             OutStateField("Modifier une ronde du Tournoi", MainViewState.EDIT_ROUND_MENU),
         )
         self.view.title = "Modification du Tournoi"

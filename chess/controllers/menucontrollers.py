@@ -65,7 +65,7 @@ class TournamentsMenuController(MenuController):
         super().__init__(
             "Nouveau Tournoi",
             "Modifier un Tournoi",
-            "Continuer un Tournoi",
+            # "Continuer un Tournoi",
         )
         self.view.title = "Menu de Gestion des Tournois"
         self.view.exitName = "Retour"
@@ -79,8 +79,8 @@ class TournamentsMenuController(MenuController):
             return MainViewState.NEW_TOURNAMENT, []
         elif value == 1:
             return MainViewState.EDIT_TOURNAMENT_MENU, []
-        elif value == 2:
-            return MainViewState.CONTINUE_TOURNAMENT_MENU, []
+        # elif value == 2:
+        #     return MainViewState.CONTINUE_TOURNAMENT_MENU, []
         return super().handle_input(value)
 
 
@@ -228,6 +228,7 @@ class ReportsMenuController(MenuController):
         )
         self.view.title = "Menu des Raports"
         self.view.exitName = "Retour"
+        self.view.empty_text = "Aucun tournoi disponible"
         self.order = "alphabetic"
         self.view.can_save = False
 
