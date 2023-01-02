@@ -1,4 +1,3 @@
 .venv/
-rapport-flake/
 __pycache__/
 *.pyc

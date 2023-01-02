@@ -17,16 +17,53 @@ Elle permet d'organiser des événements de tournois et de gérer le classement 
 
 # Installation
 
-TODO
-
 ## Prérequis
 
-TODO
+- [Git](https://git-scm.org/)
+- [Python 3.11](https://www.python.org/downloads/) ou supérieur.
+- [pip](https://docs.python.org/fr/3/library/ensurepip.html) si non installé par défaut avec Python.
 
 ## Environnement virtuel
 
-TODO
+- Linux / Mac (sh) :
+    ```bash
+    > python -m venv .venv
+    > sh ./.venv/scripts/activate
+    ```
+- Windows (cmd) :
+    ```cmd
+    > python -m venv .venv
+    > 
+    > .\.venv\Scripts\activate.bat
+    ```
+- Windows (PowerShell) :
+    ```powershell
+    > python -m venv .venv
+    > & .\.venv\Scripts\Activate.ps1
+    ```
+
+Activation de l'environnement :
+```shell
+(.venv) > python -m pip install -r requirements.txt
+```
 
 # Utilisation
 
-TODO
+> *Toute utilisation nécessite l'environnement d'avoir préalablement été activé.*
+
+Dans le repertoire du projet:
+```shell
+(.venv) > python ./main.py
+```
+
+# Generation d'un raport d'erreur de linting
+
+Dans le repertoire du projet:
+
+```shell
+# installation des dependences
+(.venv) > python -m pip install -r requirements-dev.txt
+(.venv) > flake8 --format=html --htmldir=rapport-flake
+```
+
+Le raport **HTML** est ainsi generer dans le dossier **raport-flake/index.html** à la racine du projet.
