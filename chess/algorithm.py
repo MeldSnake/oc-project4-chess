@@ -25,6 +25,15 @@ class SwissSystem:
     def _create_matches(self, round_: Round, players: list[Player]):
         while players != []:
             p1 = players.pop()
+            if players == []:
+                round_.matchs.append(Match(
+                    mapped_round=round_,
+                    start_time=datetime.datetime.now(),
+                    end_time=datetime.datetime.now(),
+                    player1=p1,
+                    player2=None,
+                    scores=(1.0, 0.0),
+                ))
             for p2 in players:
                 if not self._has_already_fought(p1, p2):
                     round_.matchs.append(Match(
@@ -45,16 +54,37 @@ class SwissSystem:
         )
         if players is None:
             players = list(map(lambda x: x[0], sorted(self.tournament.scores.items(), key=lambda x: (x[1], x[0].rank))))
-        higher_half = players[:len(players) // 2]
-        lower_half = players[len(players) // 2:]
-        self._create_matches(self.round, higher_half)
-        self._create_matches(self.round, lower_half)
+        self._create_matches(self.round, players)
         self.tournament.rounds.append(self.round)
 
     def first_round(self, players: list[Player]):
         if self.tournament.rounds != []:
             return
-        self._create_round(players)
+        self.round = Round(
+            name="Round 1",
+            number=1,
+            tournament=self.tournament,
+        )
+        higher_half = players[:len(players) // 2]
+        lower_half = players[len(players) // 2:]
+        while higher_half != [] and lower_half != []:
+            self.round.matchs.append(Match(
+                mapped_round=self.round,
+                start_time=datetime.datetime.now(),
+                end_time=None,
+                player1=higher_half.pop(0),
+                player2=lower_half.pop(0),
+            ))
+        if higher_half != [] or lower_half != []:
+            self.round.matchs.append(Match(
+                mapped_round=self.round,
+                start_time=datetime.datetime.now(),
+                end_time=datetime.datetime.now(),
+                player1=higher_half.pop() if higher_half != [] else lower_half.pop(),
+                player2=None,
+                scores=(1.0, 0.0),
+            ))
+        self.tournament.rounds.append(self.round)
         return self.round
 
     def next_round(self):
