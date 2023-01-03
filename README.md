@@ -56,6 +56,19 @@ Dans le repertoire du projet:
 (.venv) > python ./main.py
 ```
 
+Creation/Edition d'un Joueur:
+![PlayerInitEdit webm](https://user-images.githubusercontent.com/10913956/210397372-d20e176b-ffe2-4586-b575-69a16eec8bea.gif)
+
+Creation/Edition d'un Tournoi:
+![TournamentInit webm](https://user-images.githubusercontent.com/10913956/210397389-98f1772b-da25-4b34-a4ff-23f9bf958189.gif)
+
+Demarrage d'un Tournoi
+![StartTournament webm](https://user-images.githubusercontent.com/10913956/210397398-87ff911b-7824-4dfe-9485-2890f2cb4015.gif)
+
+Continuation/Finalisation d'un Tournoi
+![ContinueTournament webm](https://user-images.githubusercontent.com/10913956/210397405-38f8bfc5-0337-442d-af7d-b16e6664fa07.gif)
+
+
 # Generation d'un raport d'erreur de linting
 
 Dans le repertoire du projet:
