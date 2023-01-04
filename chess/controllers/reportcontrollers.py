@@ -44,8 +44,6 @@ class ReportsMatchsController(ItemSelectionController[Match]):
 
     def item_view_factory(self, item: Match, idx: int) -> View:
         return MatchLongReportView(
-            start_time=item.start_time,
-            end_time=item.end_time,
             scores=item.scores,
             player1=ReportsMatchsController.get_player_repr(item.player1),
             player2=ReportsMatchsController.get_player_repr(item.player2),
@@ -101,4 +99,6 @@ class ReportRoundsController(ItemSelectionController[Round | str]):
             index=idx,
             name=item.name,
             number=item.number,
+            start_time=item.start_time,
+            end_time=item.end_time,
         )

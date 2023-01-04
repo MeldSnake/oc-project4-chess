@@ -131,6 +131,8 @@ class DBAdapter:
             model_id=model_id,
             name=document["name"],
             number=document["number"],
+            start_time=deserialize_datetime(document['start_time'], None),
+            end_time=deserialize_datetime(document['end_time'], None),
             tournament=self.fromID(Tournament, document['tid']),
         )
         self.register_model(round_)
@@ -143,6 +145,8 @@ class DBAdapter:
             'name': round_.name,
             'number': round_.number,
             'tid': round_.tournament.model_id if round_.tournament is not None else -1,
+            'start_time': serialize_datetime(round_.start_time,),
+            'end_time': serialize_datetime(round_.end_time),
         }
 
     def _from_match_document(self, document: Document | None) -> Match | None:
@@ -155,8 +159,6 @@ class DBAdapter:
         match_ = Match(
             match_id=model_id,
             mapped_round=self.fromID(Round, document['round']),
-            start_time=deserialize_datetime(document['start_time'], None),
-            end_time=deserialize_datetime(document['end_time'], None),
             scores=tuple(float(x) for x in document['scores'].split('/')),
             player1=self.fromID(Player, document['player1']),
             player2=self.fromID(Player, document['player2']),
@@ -168,8 +170,6 @@ class DBAdapter:
 
     def _to_match_document(self, match: Match):
         return {
-            'start_time': serialize_datetime(match.start_time,),
-            'end_time': serialize_datetime(match.end_time),
             'round': -1 if match.round is None else match.round.model_id,
             'player1': -1 if match.player1 is None else match.player1.model_id,
             'player2': -1 if match.player2 is None else match.player2.model_id,

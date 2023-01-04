@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime
 from typing import Any, Generic, NamedTuple, Type, TypeVar, overload
 from chess.controllers.controller import Controller, MainStateReturn
 from chess.controllers.mainstate import MainViewState
@@ -161,6 +161,8 @@ class RoundSelectionController(ItemSelectionController[Round]):
             index=idx,
             name=value.name,
             number=value.number,
+            start_time=value.start_time,
+            end_time=value.end_time,
         )
 
 
@@ -177,8 +179,6 @@ class MatchSelectionController(ItemSelectionController[Match]):
             return str(value)
         return MatchReportView(
             index=idx,
-            start_time=value.start_time,
-            end_time=value.end_time,
             scores=value.scores,
         )
 
@@ -255,6 +255,8 @@ class EditRoundMenuController(ItemSelectionController[Round | str]):
             index=idx,
             name=round_.name,
             number=round_.number,
+            start_time=round_.start_time,
+            end_time=round_.end_time,
         )
 
     def run(self) -> MainStateReturn:
@@ -279,8 +281,6 @@ class EditMatchMenuController(ItemSelectionController[Match | str]):
             return match
         return MatchReportView(
             index=idx,
-            start_time=match.start_time,
-            end_time=match.end_time,
             scores=match.scores,
         )
 
@@ -365,6 +365,8 @@ class EditRoundController(EditController):
     def __init__(self):
         super().__init__(
             EditField("Definir le nom", str, "name"),
+            EditField("Definir l'heure de debut", datetime, "start_time"),
+            EditField("Definir l'heure de fin", datetime, "end_time"),
             OutStateField("Modifier un match de la ronde", MainViewState.EDIT_MATCH_MENU),
         )
         self.view.title = "Modification de la Ronde"
@@ -373,8 +375,6 @@ class EditRoundController(EditController):
 class EditMatchController(EditController):
     def __init__(self):
         super().__init__(
-            EditField("Definir l'heure de debut", time, "start_time"),
-            EditField("Definir l'heure de fin", time, "end_time"),
             OutStateField("Definir les scores", MainViewState.SET_MATCH_SCORE),
             OutStateField("Definir le vainqueur", MainViewState.CHOOSE_MATCH_WINNER),
         )

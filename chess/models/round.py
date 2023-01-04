@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Self
 
 from chess.models.model import Model
+from datetime import datetime
 
 if TYPE_CHECKING:
     from chess.models.tournament import Tournament
@@ -23,23 +24,23 @@ class Round(Model):
         return players
 
     @property
-    def started(self):
-        return all([x.start_time is not None for x in self.matchs])
-
-    @property
     def finished(self):
-        return all([x.end_time is not None for x in self.matchs])
+        return self.end_time != datetime.min
 
     def __init__(self,
                  model_id: int = -1,
                  name="",
                  number=-1,
                  tournament: Tournament | None = None,
+                 start_time: datetime | None = None,
+                 end_time: datetime | None = None,
                  matchs: list[Match] = []) -> None:
         super().__init__(model_id)
         self.name = name
         self.number = number
         self.tournament = tournament
+        self.start_time = start_time or datetime.min
+        self.end_time = end_time or datetime.min
         self.matchs: list[Match] = list(matchs)
 
     def __copy__(self):

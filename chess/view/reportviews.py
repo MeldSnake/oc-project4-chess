@@ -76,28 +76,37 @@ class RoundReportView(View):
     def __init__(self, /,
                  index: int | None = None,
                  name="",
-                 number=-1) -> None:
+                 number=-1,
+                 start_time: datetime.datetime | None = None,
+                 end_time: datetime.datetime | None = None) -> None:
         super().__init__()
         self.index = index
         self.name = name
         self.number = number
+        self.start_time = start_time
+        self.end_time = end_time
 
     def render(self):
         if self.index is not None:
             print("%d) " % self.index, end='')
-        print("Ronde %d: `%s`" % (self.number, self.name))
+        print("Ronde %d: `%s`" % (self.number, self.name), end='')
+        if self.start_time is not None:
+            print(",", self.start_time.strftime("%d/%m/%Y %H:%M"), end='')
+            if self.end_time is not None:
+                print(" ->", self.end_time.strftime("%d/%m/%Y %H:%M"), end='')
+            else:
+                print(" -> ...", end='')
+        else:
+            print(", Non commencé", end='')
+        print()
 
 
 class MatchReportView(View):
     def __init__(self, /,
                  index: int | None = None,
-                 start_time: datetime.datetime | None = None,
-                 end_time: datetime.datetime | None = None,
                  scores: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__()
         self.index = index
-        self.start_time = start_time
-        self.end_time = end_time
         self.scores = scores
 
     def render(self):
@@ -106,18 +115,11 @@ class MatchReportView(View):
             print("Match %d:" % (self.index), end=' ')
         else:
             print("Match:", end=' ')
-        if self.start_time is not None:
-            print(self.start_time.strftime("%d/%m/%Y %H:%M"), end=' => ')
-            if self.end_time is not None:
-                print(self.end_time.strftime("%d/%m/%Y %H:%M"), end=' ')
-            else:
-                print("...", end=' ')
+        print("(%.1f, %.1f), " % self.scores, end='')
+        if self.scores == (0.0, 0.0):
+            print("[En cours]", end='')
         else:
-            print("(...)", end=' ')
-        if self.end_time is None:
-            print("(%.1f, %.1f), [En cours]" % self.scores, end='')
-        else:
-            print("(%.1f, %.1f), [Terminé]" % self.scores, end='')
+            print("[Terminé]", end='')
         print()
 
 
@@ -162,44 +164,44 @@ class RoundLongReportView(View):
     def __init__(self, /,
                  index=-1,
                  name="",
-                 number=-1) -> None:
+                 number=-1,
+                 start_time: datetime.datetime | None = None,
+                 end_time: datetime.datetime | None = None) -> None:
         super().__init__()
         self.index = index
         self.name = name
         self.number = number
+        self.start_time = start_time
+        self.end_time = end_time
 
     def render(self):
         if self.index != -1:
             print("%d)" % self.index, end=' ')
         print("Ronde:", self.name)
         print("\tNumero:", self.number)
+        if self.start_time is not None:
+            print("\tDebut:", self.start_time.strftime("%d/%m/%Y %H:%M"))
+        if self.end_time is not None:
+            print("\tFin:", self.end_time.strftime("%d/%m/%Y %H:%M"))
 
 
 class MatchLongReportView(View):
     def __init__(self, /,
                  player1: str,
                  player2: str,
-                 start_time: datetime.datetime | None = None,
-                 end_time: datetime.datetime | None = None,
                  scores: tuple[float, float] = (0.0, 0.0),
                  ) -> None:
         super().__init__()
-        self.start_time = start_time
-        self.end_time = end_time
         self.scores = scores
         self.player1 = player1
         self.player2 = player2
 
     def render(self):
         print("Match:")
-        if self.start_time is not None:
-            print("\tDebut:", self.start_time.strftime("%d/%m/%Y %H:%M"))
-        if self.end_time is not None:
-            print("\tFin:", self.end_time.strftime("%d/%m/%Y %H:%M"))
         print("\tScores", *self.scores)
         print("\tJoueur 1:", self.player1)
         print("\tJoueur 2:", self.player2)
-        if self.end_time is not None:
+        if self.scores != (0.0, 0.0):
             print("\tVainqueur:", end='')
             if self.scores[0] > self.scores[1]:
                 print(self.player1)

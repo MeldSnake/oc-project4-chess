@@ -28,8 +28,6 @@ class SwissSystem:
             if players == []:
                 round_.matchs.append(Match(
                     mapped_round=round_,
-                    start_time=datetime.datetime.now(),
-                    end_time=datetime.datetime.now(),
                     player1=p1,
                     player2=None,
                     scores=(1.0, 0.0),
@@ -38,8 +36,6 @@ class SwissSystem:
                 if not self._has_already_fought(p1, p2):
                     round_.matchs.append(Match(
                         mapped_round=round_,
-                        start_time=datetime.datetime.now(),
-                        end_time=None,
                         player1=p1,
                         player2=p2,
                     ))
@@ -51,6 +47,7 @@ class SwissSystem:
             name=f"Round {len(self.tournament.rounds) + 1}",
             number=len(self.tournament.rounds) + 1,
             tournament=self.tournament,
+            start_time=datetime.datetime.now(),
         )
         if players is None:
             players = list(map(lambda x: x[0], sorted(self.tournament.scores.items(), key=lambda x: (x[1], x[0].rank))))
@@ -64,22 +61,19 @@ class SwissSystem:
             name="Round 1",
             number=1,
             tournament=self.tournament,
+            start_time=datetime.datetime.now(),
         )
         higher_half = players[:len(players) // 2]
         lower_half = players[len(players) // 2:]
         while higher_half != [] and lower_half != []:
             self.round.matchs.append(Match(
                 mapped_round=self.round,
-                start_time=datetime.datetime.now(),
-                end_time=None,
                 player1=higher_half.pop(0),
                 player2=lower_half.pop(0),
             ))
         if higher_half != [] or lower_half != []:
             self.round.matchs.append(Match(
                 mapped_round=self.round,
-                start_time=datetime.datetime.now(),
-                end_time=datetime.datetime.now(),
                 player1=higher_half.pop() if higher_half != [] else lower_half.pop(),
                 player2=None,
                 scores=(1.0, 0.0),

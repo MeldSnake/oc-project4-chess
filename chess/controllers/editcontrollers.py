@@ -86,16 +86,27 @@ class EditDatetimeController(Controller):
         self.view_time = EditView()
         self.view_time.pre_header = "Definition de la partie heure"
 
+    def __is_oldvalue_default(self):
+        if self.oldValue is None:
+            return True
+        if type(self.oldValue) == date and self.oldValue == date(1, 1, 1):
+            return True
+        if type(self.oldValue) == time and self.oldValue == time():
+            return True
+        if type(self.oldValue) == datetime and self.oldValue == datetime.min:
+            return True
+        return False
+
     def run(self) -> MainStateReturn:
-        if isinstance(self.oldValue, time):
+        if type(self.oldValue) == time:
             self.date = datetime.today()
             self.state = 1
-        elif isinstance(self.oldValue, date) and self.state != 0:
+        elif type(self.oldValue) == date and self.state != 0:
             self.state = 0
             self.time = datetime.now().time()
             return MainViewState.BACK, []
         if self.state == 0:
-            self.view_date.oldValue = self.oldValue.strftime("%d/%m/%Y") if self.oldValue != date(1, 1, 1) else None
+            self.view_date.oldValue = None if self.__is_oldvalue_default() else self.oldValue.strftime("%d/%m/%Y")  # type: ignore
             value = self.view_date.render()
             if value != "":
                 try:
@@ -113,7 +124,7 @@ class EditDatetimeController(Controller):
                 self.date = None
                 return MainViewState.BACK, []
         elif self.state == 1:
-            self.view_time.oldValue = self.oldValue.strftime("%H:%M") if self.oldValue is not None else None
+            self.view_time.oldValue = None if self.__is_oldvalue_default() else self.oldValue.strftime("%H:%M")  # type: ignore
             value = self.view_time.render()
             if value != "":
                 try:

@@ -454,10 +454,13 @@ class MainController(Controller):
         """CONTINUE_END_ROUND: Terminate the current round"""
         if self.current_round is not None:
             for match in self.current_round.matchs:
-                if match.end_time is None:
+                if match.scores == (0.0, 0.0):
                     self.current_match = match
                     self.edited_data = match
                     return MainViewState.CONTINUE_END_MATCH
+            if self.current_round.end_time == datetime.datetime.min:
+                self.current_round.updated = True
+                self.current_round.end_time = datetime.datetime.now()
         self.current_round = None
         self.states.pop()
         return MainViewState.BACK
@@ -465,7 +468,7 @@ class MainController(Controller):
     def _continue_end_match(self):
         """CONTINUE_END_MATCH: Terminate the current match"""
         if self.current_match is not None:
-            if self.current_match.end_time is None:
+            if self.current_match.scores == (0.0, 0.0):
                 self.edited_data = self.current_match
                 return MainViewState.CHOOSE_MATCH_WINNER
         self.current_match = None
@@ -496,12 +499,9 @@ class MainController(Controller):
                     else:
                         self.edited_data.scores = (0.0, 1.0)
                     self.edited_data.updated = True
-                    if self.edited_data.end_time is None:
-                        self.edited_data.end_time = datetime.datetime.now()
                 elif current_controller.equality:
                     self.edited_data.scores = (0.5, 0.5)
                     self.edited_data.updated = True
-                    self.edited_data.end_time = datetime.datetime.now()
             self.previous_controllers.pop()
             return MainViewState.BACK
         self.states.pop()
@@ -509,13 +509,7 @@ class MainController(Controller):
 
     def _continue_start_round(self):
         """CONTINUE_START_ROUND: Start the current round"""
-        if self.current_round is not None:
-            for match in self.current_round.matchs:
-                if match.start_time is None:
-                    self.current_match = match
-                    self.states.pop()
-                    return MainViewState.CONTINUE_START_MATCH
-        else:
+        if self.current_round is None:
             self.current_round = self.current_system.next_round()  # type: ignore
             self.rounds.append(self.current_round)  # type: ignore
             self.matchs.extend(self.current_round.matchs)  # type: ignore
@@ -527,9 +521,6 @@ class MainController(Controller):
 
     def _continue_start_match(self):
         """CONTINUE_START_MATCH: Start the current match"""
-        if self.current_match is not None:
-            if self.current_match.start_time is None:
-                self.current_match.start_time = datetime.datetime.now()
         self.current_match = None
         self.states.pop()
         return MainViewState.BACK
