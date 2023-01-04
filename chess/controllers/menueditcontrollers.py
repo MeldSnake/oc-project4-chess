@@ -375,7 +375,6 @@ class EditRoundController(EditController):
 class EditMatchController(EditController):
     def __init__(self):
         super().__init__(
-            OutStateField("Definir les scores", MainViewState.SET_MATCH_SCORE),
             OutStateField("Definir le vainqueur", MainViewState.CHOOSE_MATCH_WINNER),
         )
         self.view.title = "Modification du Match"
